@@ -33,9 +33,13 @@ namespace App.Business.Data
                 Attributes = GetAttributes(prop)
             };
 
-            if (prop.PropertyType.Namespace.StartsWith("App.Models"))
+            var itemType = IsCollection(prop.PropertyType)
+                ? prop.PropertyType.GetGenericArguments().First()
+                : prop.PropertyType;
+
+            if (itemType.Namespace.StartsWith("App.Models"))
             {
-                field.TypeMeta = GetTypeInfo(prop.PropertyType);
+                field.ComplexType = GetTypeInfo(itemType);
             }
 
             return field;
@@ -113,12 +117,17 @@ namespace App.Business.Data
             {
                 return "datetime";
             }
-            if (typeof(IEnumerable).IsAssignableFrom(type))
+            if (IsCollection(type))
             {
                 return "array";
             }
 
             return type.Name;
+        }
+
+        private bool IsCollection(Type type)
+        {
+            return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
         }
 
         private string ToSentenceCase(string str)

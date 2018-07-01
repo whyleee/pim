@@ -8,7 +8,7 @@ import App from './App.vue'
 import router from './router'
 
 Vue.use(BootstrapVue)
-Vue.use(VeeValidate)
+Vue.use(VeeValidate, { inject: false })
 
 Vue.config.productionTip = false
 

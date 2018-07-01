@@ -1,9 +1,17 @@
 <template>
   <div>
-    <div v-if="field.typeMeta">
+    <div v-if="field.complexType && field.type == 'array'">
+      <h4>{{ field.attributes.displayName }}</h4>
+      <ItemFieldTable
+        :item="item"
+        :field="field"
+      />
+    </div>
+
+    <div v-else-if="field.complexType">
       <h4>{{ field.attributes.displayName }}</h4>
       <ItemField
-        v-for="field in field.typeMeta.fields"
+        v-for="field in field.complexType.fields"
         :key="field.name"
         :item="item"
         :field="field"
@@ -27,20 +35,22 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import ItemFieldCheckbox from './ItemFieldCheckbox.vue'
 import ItemFieldDate from './ItemFieldDate.vue'
 import ItemFieldSelectMany from './ItemFieldSelectMany.vue'
 import ItemFieldSelectOne from './ItemFieldSelectOne.vue'
+import ItemFieldTable from './ItemFieldTable.vue'
 import ItemFieldText from './ItemFieldText.vue'
 import ItemFieldTextarea from './ItemFieldTextarea.vue'
 
-export default {
-  name: 'ItemField',
+export default Vue.component('ItemField', {
   components: {
     ItemFieldCheckbox,
     ItemFieldDate,
     ItemFieldSelectMany,
     ItemFieldSelectOne,
+    ItemFieldTable,
     ItemFieldText,
     ItemFieldTextarea
   },
@@ -63,13 +73,26 @@ export default {
       return null
     },
     fieldComponent() {
-      if (this.field.type == 'bool') return ItemFieldCheckbox
-      if (this.field.type == 'datetime') return ItemFieldDate
-      if (this.field.type == 'array') return ItemFieldSelectMany
-      if (this.field.kind == 'MultilineText') return ItemFieldTextarea
-      if (this.field.attributes.selectOptions) return ItemFieldSelectOne
+      if (this.field.type == 'bool') {
+        return ItemFieldCheckbox
+      }
+      if (this.field.type == 'datetime') {
+        return ItemFieldDate
+      }
+      if (this.field.type == 'array') {
+        return ItemFieldSelectMany
+      }
+      if (this.field.type == 'string') {
+        if (this.field.kind == 'MultilineText') {
+          return ItemFieldTextarea
+        }
+        if (this.field.attributes.selectOptions) {
+          return ItemFieldSelectOne
+        }
+      }
+
       return ItemFieldText
     }
   }
-}
+})
 </script>

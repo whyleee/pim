@@ -51,6 +51,9 @@ export default {
   components: {
     ItemField
   },
+  $_veeValidate: {
+    validator: 'new'
+  },
   props: {
     productId: {
       type: String,
@@ -113,10 +116,11 @@ export default {
       this.product = response.data
     },
     async onFormSubmit() {
-      const ok = await this.$validator.validateAll()
-      if (!ok) {
-        return
-      }
+      // TODO: validation doesn't work properly
+      // const ok = await this.$validator.validateAll()
+      // if (!ok) {
+      //   return
+      // }
 
       if (this.productId) {
         await api.products.put(this.productId, this.form)

@@ -14,6 +14,6 @@ namespace App.Models.Scheme
         public string Kind { get; set; }
         public IDictionary<string, object> Attributes { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public ItemTypeInfo TypeMeta { get; set; }
+        public ItemTypeInfo ComplexType { get; set; }
     }
 }

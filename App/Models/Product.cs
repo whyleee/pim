@@ -42,10 +42,10 @@ namespace App.Models
         public string OtherDetails { get; set; }
 
         [Display(GroupName = ProductSections.Content)]
-        public IEnumerable<ProductPairing> Pairings { get; set; }
+        public IEnumerable<ProductPairing> Pairings { get; set; } = Enumerable.Empty<ProductPairing>();
 
         [Display(GroupName = ProductSections.Content)]
-        public IEnumerable<Wholesaler> Wholesalers { get; set; }
+        public IEnumerable<Wholesaler> Wholesalers { get; set; } = Enumerable.Empty<Wholesaler>();
 
         // Nutrition
 
@@ -93,7 +93,7 @@ namespace App.Models
         // Media
 
         [Display(GroupName = ProductSections.Media)]
-        public IEnumerable<ProductImage> Images { get; set; }
+        public IEnumerable<ProductImage> Images { get; set; } = Enumerable.Empty<ProductImage>();
 
         // Publishing
 
