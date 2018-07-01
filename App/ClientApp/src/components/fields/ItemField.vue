@@ -18,13 +18,15 @@ import ItemFieldCheckbox from './ItemFieldCheckbox.vue'
 import ItemFieldDate from './ItemFieldDate.vue'
 import ItemFieldSelectMany from './ItemFieldSelectMany.vue'
 import ItemFieldText from './ItemFieldText.vue'
+import ItemFieldTextarea from './ItemFieldTextarea.vue'
 
 export default {
   components: {
     ItemFieldCheckbox,
     ItemFieldDate,
     ItemFieldSelectMany,
-    ItemFieldText
+    ItemFieldText,
+    ItemFieldTextarea
   },
   inject: ['$validator'],
   props: {
@@ -48,6 +50,7 @@ export default {
       if (this.field.type == 'bool') return ItemFieldCheckbox
       if (this.field.type == 'datetime') return ItemFieldDate
       if (this.field.type == 'array') return ItemFieldSelectMany
+      if (this.field.kind == 'MultilineText') return ItemFieldTextarea
       return ItemFieldText
     }
   }
