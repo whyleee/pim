@@ -1,5 +1,5 @@
 <template>
-  <b-list-group>
+  <b-list-group flush>
     <b-list-group-item
       v-for="product in products"
       :key="product.id"

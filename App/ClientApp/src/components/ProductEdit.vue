@@ -2,18 +2,43 @@
   <div>
     <h1>{{ title }}</h1>
     <b-form @submit.prevent="onFormSubmit">
-      <ItemField
-        v-for="field in meta.fields"
-        :key="field.name"
-        :item="form"
-        :field="field"
-      />
-      <b-button
-        type="submit"
-        variant="dark"
-      >
-        {{ submitButtonText }}
-      </b-button>
+      <b-card no-body>
+        <div slot="header">
+          <ItemField
+            v-for="field in headerFields"
+            :key="field.name"
+            :item="form"
+            :field="field"
+          />
+        </div>
+
+        <b-tabs
+          card
+          no-fade
+        >
+          <b-tab
+            v-for="[tabName, fields] in Object.entries(tabs)"
+            :key="tabName"
+            :title="tabName"
+          >
+            <ItemField
+              v-for="field in fields"
+              :key="field.name"
+              :item="form"
+              :field="field"
+            />
+          </b-tab>
+        </b-tabs>
+
+        <div slot="footer">
+          <b-button
+            type="submit"
+            variant="dark"
+          >
+            {{ submitButtonText }}
+          </b-button>
+        </div>
+      </b-card>
     </b-form>
   </div>
 </template>
@@ -47,6 +72,22 @@ export default {
     },
     submitButtonText() {
       return this.productId ? 'Save' : 'Create'
+    },
+    headerFields() {
+      return this.meta.fields
+        .filter(f => f.attributes.groupName == 'Header' && !f.attributes.readonly)
+    },
+    tabs() {
+      return this.meta.fields.reduce((tabs, field) => {
+        const { groupName } = field.attributes
+
+        if (groupName != 'Header') {
+          tabs[groupName] = tabs[groupName] || []
+          tabs[groupName].push(field)
+        }
+
+        return tabs
+      }, {})
     }
   },
   async created() {
