@@ -1,30 +1,46 @@
 <template>
-  <b-form-group
-    :horizontal="true"
-    :label="field.attributes.displayName"
-    :feedback="errors.first(field.name)"
-    :state="state"
-  >
-    <component
-      :is="fieldComponent"
-      :item="item"
-      :field="field"
-    />
-  </b-form-group>
+  <div>
+    <div v-if="field.typeMeta">
+      <h4>{{ field.attributes.displayName }}</h4>
+      <ItemField
+        v-for="field in field.typeMeta.fields"
+        :key="field.name"
+        :item="item"
+        :field="field"
+      />
+    </div>
+
+    <b-form-group
+      v-else
+      :label="field.attributes.displayName"
+      :feedback="errors.first(field.name)"
+      :state="state"
+      horizontal
+    >
+      <component
+        :is="fieldComponent"
+        :item="item"
+        :field="field"
+      />
+    </b-form-group>
+  </div>
 </template>
 
 <script>
 import ItemFieldCheckbox from './ItemFieldCheckbox.vue'
 import ItemFieldDate from './ItemFieldDate.vue'
 import ItemFieldSelectMany from './ItemFieldSelectMany.vue'
+import ItemFieldSelectOne from './ItemFieldSelectOne.vue'
 import ItemFieldText from './ItemFieldText.vue'
 import ItemFieldTextarea from './ItemFieldTextarea.vue'
 
 export default {
+  name: 'ItemField',
   components: {
     ItemFieldCheckbox,
     ItemFieldDate,
     ItemFieldSelectMany,
+    ItemFieldSelectOne,
     ItemFieldText,
     ItemFieldTextarea
   },
@@ -51,6 +67,7 @@ export default {
       if (this.field.type == 'datetime') return ItemFieldDate
       if (this.field.type == 'array') return ItemFieldSelectMany
       if (this.field.kind == 'MultilineText') return ItemFieldTextarea
+      if (this.field.attributes.selectOptions) return ItemFieldSelectOne
       return ItemFieldText
     }
   }

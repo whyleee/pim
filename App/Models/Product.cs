@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Threading.Tasks;
 using App.Models.Scheme.DataAnnotations;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
@@ -107,7 +106,8 @@ namespace App.Models
         public DateTime Updated { get; set; }
 
         [Display(GroupName = ProductSections.Publishing)]
-        public PublishStatus Status { get; set; }
+        [SelectOptions(typeof(PublishStatusSelectOptions))]
+        public string Status { get; set; }
 
         [Display(GroupName = ProductSections.Publishing)]
         public DateTime? Published { get; set; }
@@ -124,6 +124,18 @@ namespace App.Models
             {
                 new SelectOption("kg", "kg"),
                 new SelectOption("l", "l")
+            };
+        }
+    }
+
+    public class PublishStatusSelectOptions : ISelectOptionProvider
+    {
+        public IEnumerable<SelectOption> GetOptions()
+        {
+            return new[]
+            {
+                new SelectOption("Draft", "draft"),
+                new SelectOption("Published", "published")
             };
         }
     }
