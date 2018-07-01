@@ -11,27 +11,27 @@ namespace App.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class ProductsController : ControllerBase
     {
-        private readonly IValueStore _valueStore;
+        private readonly IProductStore _productStore;
 
-        public ValuesController(IValueStore valueStore)
+        public ProductsController(IProductStore productStore)
         {
-            _valueStore = valueStore;
+            _productStore = productStore;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IList<Value>>> Get(CancellationToken ct)
+        public async Task<ActionResult<IList<Product>>> Get(CancellationToken ct)
         {
-            var result = await _valueStore.GetAllAsync(ct);
+            var result = await _productStore.GetAllAsync(ct);
 
             return Ok(result);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Value>> Get(string id, CancellationToken ct)
+        public async Task<ActionResult<Product>> Get(string id, CancellationToken ct)
         {
-            var value = await _valueStore.GetByIdAsync(id, ct);
+            var value = await _productStore.GetByIdAsync(id, ct);
 
             if (value == null)
             {
@@ -42,17 +42,17 @@ namespace App.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Value>> Post(Value value, CancellationToken ct)
+        public async Task<ActionResult<Product>> Post(Product value, CancellationToken ct)
         {
-            await _valueStore.InsertAsync(value, ct);
+            await _productStore.InsertAsync(value, ct);
 
             return Ok(value);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<Value>> Put(string id, Value value, CancellationToken ct)
+        public async Task<ActionResult<Product>> Put(string id, Product value, CancellationToken ct)
         {
-            var result = await _valueStore.ReplaceAsync(value, ct);
+            var result = await _productStore.ReplaceAsync(value, ct);
 
             if (result.MatchedCount == 0)
             {
@@ -65,7 +65,7 @@ namespace App.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> Delete(string id, CancellationToken ct)
         {
-            var result = await _valueStore.DeleteAsync(id, ct);
+            var result = await _productStore.DeleteAsync(id, ct);
 
             if (result.DeletedCount == 0)
             {

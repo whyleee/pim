@@ -43,7 +43,7 @@ namespace App
             services.AddSingleton<IMongoDatabase>(s => s.GetService<IMongoClient>().GetDatabase(mongoUrl.DatabaseName));
 
             // app
-            services.AddSingleton<IValueStore, MongoValueStore>();
+            services.AddSingleton<IProductStore, MongoProductStore>();
             services.AddSingleton<MetadataProvider>();
         }
 

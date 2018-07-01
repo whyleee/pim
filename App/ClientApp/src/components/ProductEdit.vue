@@ -1,0 +1,90 @@
+<template>
+  <div>
+    <h1>{{ title }}</h1>
+    <b-form @submit.prevent="onFormSubmit">
+      <ItemField
+        v-for="field in meta.fields"
+        :key="field.name"
+        :item="form"
+        :field="field"
+      />
+      <b-button
+        type="submit"
+        variant="dark"
+      >
+        {{ submitButtonText }}
+      </b-button>
+    </b-form>
+  </div>
+</template>
+
+<script>
+import api from '@/lib/api'
+import ItemField from '@/components/fields/ItemField.vue'
+
+export default {
+  components: {
+    ItemField
+  },
+  props: {
+    productId: {
+      type: String,
+      default: undefined
+    }
+  },
+  data() {
+    return {
+      meta: {
+        fields: []
+      },
+      product: null,
+      form: {}
+    }
+  },
+  computed: {
+    title() {
+      return this.product ? this.product.name : 'New Product'
+    },
+    submitButtonText() {
+      return this.productId ? 'Save' : 'Create'
+    }
+  },
+  async created() {
+    await this.fetchMeta()
+
+    if (this.productId) {
+      await this.fetchData()
+    }
+
+    if (this.product) {
+      this.meta.fields.forEach((field) => {
+        this.$set(this.form, field.name, this.product[field.name])
+      })
+    }
+  },
+  methods: {
+    async fetchMeta() {
+      const response = await api.meta.get('product')
+      this.meta = response.data
+    },
+    async fetchData() {
+      const response = await api.products.getById(this.productId)
+      this.product = response.data
+    },
+    async onFormSubmit() {
+      const ok = await this.$validator.validateAll()
+      if (!ok) {
+        return
+      }
+
+      if (this.productId) {
+        await api.products.put(this.productId, this.form)
+      } else {
+        await api.products.post(this.form)
+      }
+
+      this.$router.push({ name: 'home' })
+    }
+  }
+}
+</script>
