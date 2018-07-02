@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="field.complexType && field.type == 'array'">
-      <h4>{{ field.attributes.displayName }}</h4>
+      <h5>{{ field.attributes.displayName }}</h5>
       <ItemFieldTable
         :item="item"
         :field="field"
