@@ -1,5 +1,11 @@
 <template>
-  <div>
+  <div
+    v-if="loading"
+    class="text-center lead"
+  >
+    Loading...
+  </div>
+  <div v-else>
     <h1>{{ title }}</h1>
     <b-form @submit.prevent="onFormSubmit">
       <b-card no-body>
@@ -31,6 +37,21 @@
         </b-tabs>
 
         <div slot="footer">
+          <b-alert
+            :show="summaryErrors.length > 0"
+            :fade="false"
+            variant="danger"
+          >
+            <ul>
+              <li
+                v-for="error in summaryErrors"
+                :key="error.id"
+              >
+                {{ error.msg }}
+              </li>
+            </ul>
+          </b-alert>
+
           <b-button
             type="submit"
             variant="dark"
@@ -66,7 +87,8 @@ export default {
         fields: []
       },
       product: null,
-      form: {}
+      form: {},
+      loading: true
     }
   },
   computed: {
@@ -91,6 +113,9 @@ export default {
 
         return tabs
       }, {})
+    },
+    summaryErrors() {
+      return this.errors.items.filter(err => !err.scope)
     }
   },
   async created() {
@@ -104,7 +129,14 @@ export default {
       this.meta.fields.forEach((field) => {
         this.$set(this.form, field.name, this.product[field.name])
       })
+    } else {
+      this.meta.fields.filter(f => f.complexType).forEach((field) => {
+        const defaultValue = field.type == 'array' ? [] : {}
+        this.$set(this.form, field.name, defaultValue)
+      })
     }
+
+    this.loading = false
   },
   methods: {
     async fetchMeta() {
@@ -116,11 +148,10 @@ export default {
       this.product = response.data
     },
     async onFormSubmit() {
-      // TODO: validation doesn't work properly
-      // const ok = await this.$validator.validateAll()
-      // if (!ok) {
-      //   return
-      // }
+      const ok = await this.$validator.validate()
+      if (!ok) {
+        return
+      }
 
       if (this.productId) {
         await api.products.put(this.productId, this.form)

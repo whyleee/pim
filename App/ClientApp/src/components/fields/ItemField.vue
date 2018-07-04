@@ -21,7 +21,7 @@
     <b-form-group
       v-else
       :label="field.attributes.displayName"
-      :feedback="errors.first(field.name)"
+      :feedback="errors.first(errorSelector)"
       :state="state"
       horizontal
     >
@@ -29,6 +29,7 @@
         :is="fieldComponent"
         :item="item"
         :field="field"
+        :scope="scope"
       />
     </b-form-group>
   </div>
@@ -63,12 +64,22 @@ export default Vue.component('ItemField', {
     field: {
       type: Object,
       required: true
+    },
+    scope: {
+      type: String,
+      default: undefined
     }
   },
   computed: {
+    errorSelector() {
+      if (this.scope) {
+        return `${this.scope}.${this.field.name}`
+      }
+      return this.field.name
+    },
     state() {
-      if (this.errors.has(this.field.name)) {
-        return 'invalid'
+      if (this.errors.has(this.errorSelector)) {
+        return false
       }
       return null
     },

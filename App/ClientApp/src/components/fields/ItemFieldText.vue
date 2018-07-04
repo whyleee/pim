@@ -8,11 +8,11 @@
     </span>
     <b-form-input
       v-validate="validators"
+      v-model="item[field.name]"
       :type="type"
       :name="field.name"
-      v-model="item[field.name]"
       :step="step"
-      :readonly="readonly"
+      :readonly="field.attributes.readonly"
       :data-vv-as="field.attributes.displayName"
       :state="state"
     />
@@ -30,6 +30,10 @@ export default {
     field: {
       type: Object,
       required: true
+    },
+    scope: {
+      type: String,
+      default: undefined
     }
   },
   computed: {
@@ -48,20 +52,24 @@ export default {
       }
       return undefined
     },
-    readonly() {
-      return this.field.attributes.readonly
-    },
     validators() {
-      const { range } = this.field.attributes
+      const { range, required, regex } = this.field.attributes
       return {
-        required: !!this.field.attributes.required,
+        required: !!required,
+        regex,
         url: this.field.kind == 'Url' || this.field.kind == 'ImageUrl' ? [true] : false,
         between: range ? [range.min, range.max] : false
       }
     },
+    errorSelector() {
+      if (this.scope) {
+        return `${this.scope}.${this.field.name}`
+      }
+      return this.field.name
+    },
     state() {
-      if (this.errors.has(this.field.name)) {
-        return 'invalid'
+      if (this.errors.has(this.errorSelector)) {
+        return false
       }
       return null
     }

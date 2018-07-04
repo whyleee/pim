@@ -66,6 +66,10 @@ namespace App.Business.Data
                 {
                     dict.Add("range", new { Min = range.Minimum, Max = range.Maximum });
                 }
+                if (attr is RegularExpressionAttribute regex)
+                {
+                    dict.Add("regex", regex.Pattern);
+                }
                 if (attr is DisplayAttribute display)
                 {
                     if (!string.IsNullOrEmpty(display.Name))

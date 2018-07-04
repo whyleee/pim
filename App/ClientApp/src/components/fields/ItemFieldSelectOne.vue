@@ -2,9 +2,11 @@
   <div>
     <b-form-select
       v-validate="validators"
-      :name="field.name"
       v-model="item[field.name]"
+      :name="field.name"
       :options="options"
+      :data-vv-as="field.attributes.displayName"
+      :state="state"
     />
   </div>
 </template>
@@ -20,6 +22,10 @@ export default {
     field: {
       type: Object,
       required: true
+    },
+    scope: {
+      type: String,
+      default: undefined
     }
   },
   computed: {
@@ -30,6 +36,18 @@ export default {
       return {
         required: !!this.field.attributes.required
       }
+    },
+    errorSelector() {
+      if (this.scope) {
+        return `${this.scope}.${this.field.name}`
+      }
+      return this.field.name
+    },
+    state() {
+      if (this.errors.has(this.errorSelector)) {
+        return false
+      }
+      return null
     }
   }
 }

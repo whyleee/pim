@@ -41,24 +41,24 @@
       </template>
     </b-table>
 
-    <b-modal
+    <ItemFieldTableModal
       ref="itemModal"
       :title="modalTitle"
+      :item="modalItem"
+      :meta="field.complexType"
       @ok="saveModalItem"
-      @cancel="closeModal"
-    >
-      <ItemField
-        v-for="field in field.complexType.fields"
-        :key="field.name"
-        :item="modalItem"
-        :field="field"
-      />
-    </b-modal>
+      @cancel="resetEditingRow"
+    />
   </b-card>
 </template>
 
 <script>
+import ItemFieldTableModal from './ItemFieldTableModal.vue'
+
 export default {
+  components: {
+    ItemFieldTableModal
+  },
   props: {
     item: {
       type: Object,
@@ -94,6 +94,8 @@ export default {
   },
   methods: {
     onAddClick() {
+      this.modalItem = {}
+      this.resetEditingRow()
       this.$refs.itemModal.show()
     },
     onEditClick(item, index) {
@@ -111,10 +113,9 @@ export default {
         this.model.push(this.modalItem)
       }
 
-      this.closeModal()
+      this.resetEditingRow()
     },
-    closeModal() {
-      this.modalItem = {}
+    resetEditingRow() {
       this.editingRowIndex = -1
     }
   }
