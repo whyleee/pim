@@ -64,15 +64,15 @@ namespace App.Models
         public string AllergicIngredients { get; set; }
 
         [Display(GroupName = ProductSections.Nutrition)]
-        public NutritionValues NutritionValues { get; set; }
+        public NutritionValues NutritionValues { get; set; } = new NutritionValues();
 
         // Labels
 
         [Display(GroupName = ProductSections.Labels)]
-        public ProductLabels Labels { get; set; }
+        public ProductLabels Labels { get; set; } = new ProductLabels();
 
         [Display(GroupName = ProductSections.Labels)]
-        public Allergy Allergy { get; set; }
+        public Allergy Allergy { get; set; } = new Allergy();
 
         // Storage
 
@@ -85,10 +85,10 @@ namespace App.Models
         public string WeightUnit { get; set; }
 
         [Display(GroupName = ProductSections.Storage)]
-        public ProductStorageTerm StorageTerm { get; set; }
+        public ProductStorageTerm StorageTerm { get; set; } = new ProductStorageTerm();
 
         [Display(GroupName = ProductSections.Storage)]
-        public ProductStorageTemperature StorageTemperature { get; set; }
+        public ProductStorageTemperature StorageTemperature { get; set; } = new ProductStorageTemperature();
 
         // Media
 
@@ -113,7 +113,7 @@ namespace App.Models
         public DateTime? Published { get; set; }
 
         [Display(GroupName = ProductSections.Publishing)]
-        public MarkAsNew MarkAsNew { get; set; }
+        public MarkAsNew MarkAsNew { get; set; } = new MarkAsNew();
     }
 
     public class WeightUnitSelectOptions : ISelectOptionProvider

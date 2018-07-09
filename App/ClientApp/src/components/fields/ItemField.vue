@@ -10,10 +10,10 @@
   <div v-else-if="field.complexType">
     <h5>{{ field.attributes.displayName }}</h5>
     <ItemField
-      v-for="field in field.complexType.fields"
-      :key="field.name"
-      :item="item"
-      :field="field"
+      v-for="innerField in field.complexType.fields"
+      :key="innerField.name"
+      :item="item[field.name]"
+      :field="innerField"
       :scope="scope"
     />
   </div>
