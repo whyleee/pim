@@ -19,6 +19,43 @@
       striped
       hover
     >
+      <div
+        v-for="field in field.complexType.fields"
+        slot-scope="{ value }"
+        :key="field.name"
+        :slot="field.name"
+      >
+        <a
+          v-if="field.type == 'string' && field.kind == 'Url'"
+          :href="value"
+        >
+          {{ value }}
+        </a>
+
+        <img
+          v-else-if="field.type == 'string' && field.kind == 'ImageUrl'"
+          :src="value"
+          class="img-thumbnail"
+        >
+
+        <template v-else-if="field.type == 'bool'">
+          <b-form-checkbox
+            :checked="value"
+            disabled
+          />
+        </template>
+
+        <template v-else-if="field.type == 'datetime'">
+          {{ formatDate(value, 'MMMM D, YYYY') }}
+        </template>
+
+        <template v-else-if="field.type == 'array'">
+          {{ getSelectedOptions(field, value).map(x => x.text).join(', ') }}
+        </template>
+
+        <template v-else>{{ value }}</template>
+      </div>
+
       <template
         slot="actions"
         slot-scope="row"
@@ -53,6 +90,7 @@
 </template>
 
 <script>
+import { format as formatDate } from 'date-fns/esm'
 import ItemFieldTableModal from './ItemFieldTableModal.vue'
 
 export default {
@@ -93,6 +131,16 @@ export default {
     }
   },
   methods: {
+    formatDate,
+    getSelectedOptions(field, value) {
+      if (!value) {
+        return []
+      }
+
+      const { selectOptions } = field.attributes
+      return value
+        .map(val => selectOptions.find(opt => opt.value == val))
+    },
     onAddClick() {
       this.modalItem = {}
       this.resetEditingRow()
@@ -121,3 +169,10 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.img-thumbnail {
+  max-width: 100px;
+  max-height: 100px;
+}
+</style>
