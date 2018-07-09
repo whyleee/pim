@@ -1,12 +1,14 @@
 <template>
-  <div>
-    <b-form-checkbox-group
-      :name="field.name"
-      v-model="item[field.name]"
-      :options="options"
-      stacked
-    />
-  </div>
+  <b-form-checkbox-group
+    v-validate="validators"
+    v-model="item[field.name]"
+    :name="field.name"
+    :options="options"
+    :disabled="field.attributes.readonly"
+    :data-vv-as="field.attributes.displayName"
+    :state="state"
+    stacked
+  />
 </template>
 
 <script>
@@ -20,26 +22,32 @@ export default {
     field: {
       type: Object,
       required: true
+    },
+    scope: {
+      type: String,
+      default: undefined
     }
   },
   computed: {
     options() {
       return this.field.attributes.selectOptions
-    }
-  },
-  created() {
-    this.attachValidators()
-  },
-  methods: {
-    attachValidators() {
-      this.$validator.attach({
-        name: this.field.name,
-        alias: this.field.attributes.displayName,
-        getter: () => this.item[this.field.name],
-        rules: {
-          required: !!this.field.attributes.required
-        }
-      })
+    },
+    validators() {
+      return {
+        required: !!this.field.attributes.required
+      }
+    },
+    errorSelector() {
+      if (this.scope) {
+        return `${this.scope}.${this.field.name}`
+      }
+      return this.field.name
+    },
+    state() {
+      if (this.errors.has(this.errorSelector)) {
+        return false
+      }
+      return null
     }
   }
 }

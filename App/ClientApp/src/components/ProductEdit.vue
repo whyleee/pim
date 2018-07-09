@@ -104,7 +104,7 @@ export default {
     },
     tabs() {
       return this.meta.fields.reduce((tabs, field) => {
-        const { groupName } = field.attributes
+        const groupName = field.attributes.groupName || 'Content'
 
         if (groupName != 'Header') {
           tabs[groupName] = tabs[groupName] || []

@@ -1,22 +1,14 @@
 <template>
-  <div class="input-group">
-    <span
-      v-if="field.kind == 'Currency'"
-      class="input-group-addon"
-    >
-      $
-    </span>
-    <b-form-input
-      v-validate="validators"
-      v-model="item[field.name]"
-      :type="type"
-      :name="field.name"
-      :step="step"
-      :readonly="field.attributes.readonly"
-      :data-vv-as="field.attributes.displayName"
-      :state="state"
-    />
-  </div>
+  <b-form-input
+    v-validate="validators"
+    v-model="item[field.name]"
+    :type="type"
+    :name="field.name"
+    :step="step"
+    :readonly="field.attributes.readonly"
+    :data-vv-as="field.attributes.displayName"
+    :state="state"
+  />
 </template>
 
 <script>
@@ -46,9 +38,6 @@ export default {
     step() {
       if (this.field.type == 'integer') {
         return 1
-      }
-      if (this.field.kind == 'Currency') {
-        return 0.01
       }
       return undefined
     },

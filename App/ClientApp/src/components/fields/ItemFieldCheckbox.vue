@@ -1,11 +1,9 @@
 <template>
-  <div>
-    <b-form-checkbox
-      :name="field.name"
-      v-model="item[field.name]"
-      :disabled="readonly"
-    />
-  </div>
+  <b-form-checkbox
+    v-model="item[field.name]"
+    :name="field.name"
+    :disabled="field.attributes.readonly"
+  />
 </template>
 
 <script>
@@ -18,11 +16,10 @@ export default {
     field: {
       type: Object,
       required: true
-    }
-  },
-  computed: {
-    readonly() {
-      return this.field.attributes.readonly
+    },
+    scope: {
+      type: String,
+      default: undefined
     }
   }
 }

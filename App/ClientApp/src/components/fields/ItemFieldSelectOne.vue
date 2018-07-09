@@ -1,14 +1,13 @@
 <template>
-  <div>
-    <b-form-select
-      v-validate="validators"
-      v-model="item[field.name]"
-      :name="field.name"
-      :options="options"
-      :data-vv-as="field.attributes.displayName"
-      :state="state"
-    />
-  </div>
+  <b-form-select
+    v-validate="validators"
+    v-model="item[field.name]"
+    :name="field.name"
+    :options="options"
+    :disabled="field.attributes.readonly"
+    :data-vv-as="field.attributes.displayName"
+    :state="state"
+  />
 </template>
 
 <script>

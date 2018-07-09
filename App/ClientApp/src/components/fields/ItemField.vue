@@ -1,38 +1,37 @@
 <template>
-  <div>
-    <div v-if="field.complexType && field.type == 'array'">
-      <h5>{{ field.attributes.displayName }}</h5>
-      <ItemFieldTable
-        :item="item"
-        :field="field"
-      />
-    </div>
-
-    <div v-else-if="field.complexType">
-      <h4>{{ field.attributes.displayName }}</h4>
-      <ItemField
-        v-for="field in field.complexType.fields"
-        :key="field.name"
-        :item="item"
-        :field="field"
-      />
-    </div>
-
-    <b-form-group
-      v-else
-      :label="field.attributes.displayName"
-      :feedback="errors.first(errorSelector)"
-      :state="state"
-      horizontal
-    >
-      <component
-        :is="fieldComponent"
-        :item="item"
-        :field="field"
-        :scope="scope"
-      />
-    </b-form-group>
+  <div v-if="field.complexType && field.type == 'array'">
+    <h5>{{ field.attributes.displayName }}</h5>
+    <ItemFieldTable
+      :item="item"
+      :field="field"
+    />
   </div>
+
+  <div v-else-if="field.complexType">
+    <h5>{{ field.attributes.displayName }}</h5>
+    <ItemField
+      v-for="field in field.complexType.fields"
+      :key="field.name"
+      :item="item"
+      :field="field"
+      :scope="scope"
+    />
+  </div>
+
+  <b-form-group
+    v-else
+    :label="field.attributes.displayName"
+    :feedback="errors.first(errorSelector)"
+    :state="state"
+    horizontal
+  >
+    <component
+      :is="fieldComponent"
+      :item="item"
+      :field="field"
+      :scope="scope"
+    />
+  </b-form-group>
 </template>
 
 <script>
