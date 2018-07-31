@@ -1,24 +1,81 @@
 <template>
-  <div class="b-datepicker">
-    <datepicker
-      v-validate="validators"
-      :name="field.name"
-      v-model="date"
-      :data-vv-as="field.attributes.displayName"
-      :state="state"
-      :input-class="inputClass"
-      format="MMMM d, yyyy"
+  <div :id="`date-container-${_uid}`">
+    <b-form-input
+      v-if="field.attributes.readonly"
+      :value="prettyDateTime"
+      plaintext
     />
+    <b-input-group v-else>
+      <b-input-group-prepend>
+        <b-btn :id="`calendar-btn-${_uid}`">
+          <font-awesome-icon :icon="calendarIcon"/>
+        </b-btn>
+
+        <b-popover
+          :target="`calendar-btn-${_uid}`"
+          :container="`date-container-${_uid}`"
+          triggers="click blur"
+          placement="bottomright"
+        >
+          <div>
+            <datepicker
+              v-model="dateTime"
+              inline
+            />
+
+            <div class="text-center mt-2">
+              <font-awesome-icon
+                :icon="clockIcon"
+                class="clock-icon mr-2"/>
+              <timepicker
+                v-model="time"
+              />
+            </div>
+          </div>
+        </b-popover>
+      </b-input-group-prepend>
+
+      <b-form-input
+        v-validate="validators"
+        v-model="inputValue"
+        :name="field.name"
+        :data-vv-as="field.attributes.displayName"
+        :state="state"
+        @change="onInputChange"
+      />
+
+      <b-input-group-append v-if="dateTime">
+        <b-btn @click.prevent="onClearClick">
+          Clear
+        </b-btn>
+      </b-input-group-append>
+    </b-input-group>
   </div>
 </template>
 
 <script>
-import { format } from 'date-fns/esm'
+import {
+  isValid as isValidDate,
+  format as formatDate,
+  parse as parseDate
+} from 'date-fns/esm'
 import Datepicker from 'vuejs-datepicker'
+import Timepicker from 'vue2-timepicker'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import {
+  faCalendarAlt,
+  faClock
+} from '@fortawesome/free-regular-svg-icons'
+import { Validator } from 'vee-validate'
+
+const DATE_FORMAT = 'MMMM d, yyyy \'at\' HH:mm'
+const NOTIME_FORMAT = 'MMMM d, yyyy'
 
 export default {
   components: {
-    Datepicker
+    Datepicker,
+    Timepicker,
+    FontAwesomeIcon
   },
   inject: ['$validator'],
   props: {
@@ -29,50 +86,155 @@ export default {
     field: {
       type: Object,
       required: true
+    },
+    scope: {
+      type: String,
+      default: undefined
+    }
+  },
+  data() {
+    return {
+      inputValue: null
     }
   },
   computed: {
-    date: {
+    calendarIcon() {
+      return faCalendarAlt
+    },
+    clockIcon() {
+      return faClock
+    },
+    time: {
       get() {
-        return this.item[this.field.name]
+        if (!this.dateTime) {
+          return null
+        }
+        return {
+          HH: formatDate(this.dateTime, 'HH'),
+          mm: formatDate(this.dateTime, 'mm')
+        }
       },
       set(value) {
-        this.item[this.field.name] = format(value, 'YYYY-MM-DD')
+        const { dateTime } = this
+        dateTime.setHours(value.HH)
+        dateTime.setMinutes(value.mm)
+        this.dateTime = dateTime
       }
+    },
+    dateTime: {
+      get() {
+        if (!this.item[this.field.name]) {
+          return null
+        }
+        return new Date(this.item[this.field.name])
+      },
+      set(value) {
+        this.item[this.field.name] = value ? value.toISOString() : null
+      }
+    },
+    prettyDateTime() {
+      return this.getPrettyDate(this.dateTime)
     },
     validators() {
       return {
-        required: !!this.field.attributes.required
+        required: !!this.field.attributes.required,
+        pretty_date_format: true
       }
+    },
+    errorSelector() {
+      if (this.scope) {
+        return `${this.scope}.${this.field.name}`
+      }
+      return this.field.name
     },
     state() {
-      if (this.errors.has(this.field.name)) {
-        return 'invalid'
+      if (this.errors.has(this.errorSelector)) {
+        return false
       }
       return null
+    }
+  },
+  watch: {
+    dateTime(value) {
+      this.inputValue = this.getPrettyDate(value)
+    }
+  },
+  created() {
+    Validator.extend('pretty_date_format', {
+      getMessage: field => `The ${field} field must be in format ${DATE_FORMAT}.`,
+      validate: (value) => {
+        if (!value) {
+          return true
+        }
+        const parsedDate = this.parsePrettyDate(value)
+        return isValidDate(parsedDate)
+      }
+    })
+  },
+  methods: {
+    getPrettyDate(date) {
+      if (!date) {
+        return ''
+      }
+      return formatDate(date, DATE_FORMAT)
+        .replace('at 00:00', '')
     },
-    inputClass() {
-      return `form-control${this.errors.has(this.field.name) ? ' is-invalid' : ''}`
+    parsePrettyDate(value, baseDate) {
+      const parseFormat = value.indexOf(' at ') >= 0 ? DATE_FORMAT : NOTIME_FORMAT
+      return parseDate(value, parseFormat, baseDate || new Date())
+    },
+    onClearClick() {
+      this.dateTime = null
+    },
+    onInputChange(value) {
+      if (!value) {
+        this.dateTime = null
+        return
+      }
+
+      const parsedDateTime = this.parsePrettyDate(value, this.dateTime)
+
+      if (isValidDate(parsedDateTime)) {
+        this.dateTime = parsedDateTime
+      }
     }
   }
 }
 </script>
 
 <style scoped>
-  .vdp-datepicker input[readonly] {
-    background-color: #fff;
-  }
-  .vdp-datepicker[state="invalid"] ~ .invalid-feedback {
-    display: block;
-  }
-  .vdp-datepicker__calendar header .next,
-  .vdp-datepicker__calendar header .prev {
-    text-indent: 0;
-    font-size: 1.3rem;
-  }
-  .vdp-datepicker__calendar header .next:after,
-  .vdp-datepicker__calendar header .prev:after {
-    display: none
+  .clock-icon {
+    vertical-align: -0.25em;
   }
 </style>
 
+<style>
+  /* increase popover width */
+  .popover {
+    max-width: 100%;
+  }
+
+  /* open timepicker above the input */
+  .time-picker .dropdown {
+    top: calc(-10em - 5px);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+
+  /* set gray active color to timepicker */
+  .time-picker .dropdown ul li.active,
+  .time-picker .dropdown ul li.active:hover {
+    background: #6c757d;
+  }
+
+  /* set gray colors to datepicker */
+  .vdp-datepicker__calendar .cell:not(.blank):not(.disabled).day:hover,
+  .vdp-datepicker__calendar .cell:not(.blank):not(.disabled).month:hover,
+  .vdp-datepicker__calendar .cell:not(.blank):not(.disabled).year:hover {
+    border: 1px solid #6c757d;
+  }
+  .vdp-datepicker__calendar .cell.selected,
+  .vdp-datepicker__calendar .cell.selected:hover {
+    background: #6c757d;
+    color: #fff;
+  }
+</style>
