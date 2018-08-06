@@ -3,6 +3,7 @@
     <h5>{{ field.attributes.displayName }}</h5>
     <ItemFieldTable
       :item="item"
+      :orig-item="origItem"
       :field="field"
     />
   </div>
@@ -13,6 +14,7 @@
       v-for="innerField in field.complexType.fields"
       :key="innerField.name"
       :item="item[field.name]"
+      :orig-item="origItem[field.name]"
       :field="innerField"
       :scope="scope"
     />
@@ -28,6 +30,7 @@
     <component
       :is="fieldComponent"
       :item="item"
+      :orig-item="origItem"
       :field="field"
       :scope="scope"
     />
@@ -57,6 +60,10 @@ export default Vue.component('ItemField', {
   inject: ['$validator'],
   props: {
     item: {
+      type: Object,
+      required: true
+    },
+    origItem: {
       type: Object,
       required: true
     },

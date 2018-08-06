@@ -14,6 +14,7 @@
             v-for="field in headerFields"
             :key="field.name"
             :item="form"
+            :orig-item="origItem"
             :field="field"
           />
         </div>
@@ -31,6 +32,7 @@
               v-for="field in fields"
               :key="field.name"
               :item="form"
+              :orig-item="origItem"
               :field="field"
             />
           </b-tab>
@@ -88,6 +90,7 @@ export default {
       },
       product: null,
       form: {},
+      origItem: null,
       loading: true
     }
   },
@@ -126,15 +129,16 @@ export default {
     }
 
     if (this.product) {
-      this.meta.fields.forEach((field) => {
-        this.$set(this.form, field.name, this.product[field.name])
-      })
+      this.form = JSON.parse(JSON.stringify(this.product))
     } else {
+      // TODO: fix reactivity
       this.meta.fields.filter(f => f.complexType).forEach((field) => {
         const defaultValue = field.type == 'array' ? [] : {}
         this.$set(this.form, field.name, defaultValue)
       })
     }
+
+    this.origItem = this.product || Object.assign({}, this.form)
 
     this.loading = false
   },

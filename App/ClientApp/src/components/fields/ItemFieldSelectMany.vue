@@ -1,7 +1,7 @@
 <template>
   <b-form-checkbox-group
     v-validate="validators"
-    v-model="item[field.name]"
+    v-model="model"
     :name="field.name"
     :options="options"
     :disabled="field.attributes.readonly"
@@ -19,6 +19,10 @@ export default {
       type: Object,
       required: true
     },
+    origItem: {
+      type: Object,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -29,6 +33,17 @@ export default {
     }
   },
   computed: {
+    model: {
+      get() {
+        return this.item[this.field.name]
+      },
+      set(value) {
+        this.item[this.field.name] = value
+      }
+    },
+    origModel() {
+      return this.origItem[this.field.name]
+    },
     options() {
       return this.field.attributes.selectOptions
     },
@@ -47,7 +62,30 @@ export default {
       if (this.errors.has(this.errorSelector)) {
         return false
       }
+      if (this.isModified) {
+        return true
+      }
       return null
+    },
+    isModified() {
+      if (this.model.length != this.origModel.length) {
+        return true
+      }
+
+      function isModified(value, origValue) {
+        if (!value && !origValue) {
+          return false
+        }
+        return value != origValue
+      }
+
+      for (let i = 0; i < this.model.length; i += 1) {
+        if (isModified(this.model[i], this.origModel[i])) {
+          return true
+        }
+      }
+
+      return false
     }
   }
 }

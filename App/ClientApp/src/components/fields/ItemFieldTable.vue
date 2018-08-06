@@ -1,5 +1,6 @@
 <template>
   <b-card
+    :border-variant="isModified ? 'success' : null"
     class="mb-3"
     no-body
   >
@@ -82,6 +83,7 @@
       ref="itemModal"
       :title="modalTitle"
       :item="modalItem"
+      :orig-item="origModalItem"
       :meta="field.complexType"
       @ok="saveModalItem"
       @cancel="resetEditingRow"
@@ -102,6 +104,10 @@ export default {
       type: Object,
       required: true
     },
+    origItem: {
+      type: Object,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -110,12 +116,16 @@ export default {
   data() {
     return {
       modalItem: {},
+      origModalItem: {},
       editingRowIndex: -1
     }
   },
   computed: {
     model() {
       return this.item[this.field.name]
+    },
+    origModel() {
+      return this.origItem[this.field.name]
     },
     columns() {
       return this.field.complexType.fields.map(field => ({
@@ -128,6 +138,34 @@ export default {
     },
     modalTitle() {
       return this.editingRowIndex >= 0 ? 'Edit' : 'Add'
+    },
+    isModified() {
+      if (this.model.length != this.origModel.length) {
+        return true
+      }
+
+      function isModified(value, origValue) {
+        if (!value && !origValue) {
+          return false
+        }
+        return value != origValue
+      }
+
+      for (let i = 0; i < this.model.length; i += 1) {
+        const item = this.model[i]
+        const origItem = this.origModel[i]
+        const keys = Object.keys(item)
+
+        for (let j = 0; j < keys.length; j += 1) {
+          const key = keys[j]
+
+          if (isModified(item[key], origItem[key])) {
+            return true
+          }
+        }
+      }
+
+      return false
     }
   },
   methods: {
@@ -142,12 +180,14 @@ export default {
         .map(val => selectOptions.find(opt => opt.value == val))
     },
     onAddClick() {
-      this.modalItem = {}
+      this.modalItem = this.createEmptyItem()
+      this.origModalItem = this.createEmptyItem()
       this.resetEditingRow()
       this.$refs.itemModal.show()
     },
     onEditClick(item, index) {
       this.modalItem = Object.assign({}, item)
+      this.origModalItem = Object.assign({}, item)
       this.editingRowIndex = index
       this.$refs.itemModal.show()
     },
@@ -165,6 +205,12 @@ export default {
     },
     resetEditingRow() {
       this.editingRowIndex = -1
+    },
+    createEmptyItem() {
+      return this.field.complexType.fields.reduce((item, field) => {
+        item[field.name] = null
+        return item
+      }, {})
     }
   }
 }

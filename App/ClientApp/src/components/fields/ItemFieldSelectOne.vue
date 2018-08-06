@@ -1,7 +1,7 @@
 <template>
   <b-form-select
     v-validate="validators"
-    v-model="item[field.name]"
+    v-model="value"
     :name="field.name"
     :options="options"
     :disabled="field.attributes.readonly"
@@ -18,6 +18,10 @@ export default {
       type: Object,
       required: true
     },
+    origItem: {
+      type: Object,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -28,6 +32,17 @@ export default {
     }
   },
   computed: {
+    value: {
+      get() {
+        return this.item[this.field.name]
+      },
+      set(value) {
+        this.item[this.field.name] = value
+      }
+    },
+    origValue() {
+      return this.origItem[this.field.name]
+    },
     options() {
       return this.field.attributes.selectOptions
     },
@@ -46,7 +61,16 @@ export default {
       if (this.errors.has(this.errorSelector)) {
         return false
       }
+      if (this.isModified) {
+        return true
+      }
       return null
+    },
+    isModified() {
+      if (!this.value && !this.origValue) {
+        return false
+      }
+      return this.value != this.origValue
     }
   }
 }

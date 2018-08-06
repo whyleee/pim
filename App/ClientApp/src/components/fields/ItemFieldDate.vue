@@ -83,6 +83,10 @@ export default {
       type: Object,
       required: true
     },
+    origItem: {
+      type: Object,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -104,6 +108,17 @@ export default {
     clockIcon() {
       return faClock
     },
+    value: {
+      get() {
+        return this.item[this.field.name]
+      },
+      set(value) {
+        this.item[this.field.name] = value
+      }
+    },
+    origValue() {
+      return this.origItem[this.field.name]
+    },
     time: {
       get() {
         if (!this.dateTime) {
@@ -123,13 +138,13 @@ export default {
     },
     dateTime: {
       get() {
-        if (!this.item[this.field.name]) {
+        if (!this.value) {
           return null
         }
-        return new Date(this.item[this.field.name])
+        return new Date(this.value)
       },
       set(value) {
-        this.item[this.field.name] = value ? value.toISOString() : null
+        this.value = value ? value.toISOString() : null
       }
     },
     prettyDateTime() {
@@ -151,7 +166,16 @@ export default {
       if (this.errors.has(this.errorSelector)) {
         return false
       }
+      if (this.isModified) {
+        return true
+      }
       return null
+    },
+    isModified() {
+      if (!this.value && !this.origValue) {
+        return false
+      }
+      return new Date(this.value).getTime() != new Date(this.origValue).getTime()
     }
   },
   watch: {

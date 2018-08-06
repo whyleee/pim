@@ -1,7 +1,7 @@
 <template>
   <b-form-input
     v-validate="validators"
-    v-model="item[field.name]"
+    v-model="value"
     :type="type"
     :name="field.name"
     :step="step"
@@ -19,6 +19,10 @@ export default {
       type: Object,
       required: true
     },
+    origItem: {
+      type: Object,
+      required: true
+    },
     field: {
       type: Object,
       required: true
@@ -29,6 +33,17 @@ export default {
     }
   },
   computed: {
+    value: {
+      get() {
+        return this.item[this.field.name]
+      },
+      set(value) {
+        this.item[this.field.name] = value
+      }
+    },
+    origValue() {
+      return this.origItem[this.field.name]
+    },
     type() {
       if (this.field.type == 'integer' || this.field.type == 'number') {
         return 'number'
@@ -60,7 +75,16 @@ export default {
       if (this.errors.has(this.errorSelector)) {
         return false
       }
+      if (this.isModified) {
+        return true
+      }
       return null
+    },
+    isModified() {
+      if (!this.value && !this.origValue) {
+        return false
+      }
+      return this.value != this.origValue
     }
   }
 }

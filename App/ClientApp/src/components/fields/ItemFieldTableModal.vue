@@ -14,6 +14,7 @@
         v-for="field in meta.fields"
         :key="field.name"
         :item="item"
+        :orig-item="origItem"
         :field="field"
         :scope="vvScope"
       />
@@ -32,6 +33,10 @@ export default {
       required: true
     },
     item: {
+      type: Object,
+      required: true
+    },
+    origItem: {
       type: Object,
       required: true
     },
