@@ -128,17 +128,8 @@ export default {
       await this.fetchData()
     }
 
-    if (this.product) {
-      this.form = JSON.parse(JSON.stringify(this.product))
-    } else {
-      // TODO: fix reactivity
-      this.meta.fields.filter(f => f.complexType).forEach((field) => {
-        const defaultValue = field.type == 'array' ? [] : {}
-        this.$set(this.form, field.name, defaultValue)
-      })
-    }
-
-    this.origItem = this.product || Object.assign({}, this.form)
+    this.origItem = this.product || this.meta.defaultItem
+    this.form = JSON.parse(JSON.stringify(this.origItem))
 
     this.loading = false
   },

@@ -180,14 +180,14 @@ export default {
         .map(val => selectOptions.find(opt => opt.value == val))
     },
     onAddClick() {
-      this.modalItem = this.createEmptyItem()
-      this.origModalItem = this.createEmptyItem()
+      this.origModalItem = this.field.complexType.defaultItem
+      this.modalItem = this.deepClone(this.origModalItem)
       this.resetEditingRow()
       this.$refs.itemModal.show()
     },
     onEditClick(item, index) {
-      this.modalItem = Object.assign({}, item)
-      this.origModalItem = Object.assign({}, item)
+      this.origModalItem = item
+      this.modalItem = this.deepClone(item)
       this.editingRowIndex = index
       this.$refs.itemModal.show()
     },
@@ -206,11 +206,8 @@ export default {
     resetEditingRow() {
       this.editingRowIndex = -1
     },
-    createEmptyItem() {
-      return this.field.complexType.fields.reduce((item, field) => {
-        item[field.name] = null
-        return item
-      }, {})
+    deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj))
     }
   }
 }

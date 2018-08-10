@@ -9,5 +9,6 @@ namespace App.Models.Scheme
     {
         public string Name { get; set; }
         public IEnumerable<ItemFieldInfo> Fields { get; set; }
+        public object DefaultItem { get; set; }
     }
 }

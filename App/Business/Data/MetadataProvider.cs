@@ -19,7 +19,8 @@ namespace App.Business.Data
             return new ItemTypeInfo
             {
                 Name = type.Name,
-                Fields = type.GetProperties().Select(GetTypeFieldInfo).ToList()
+                Fields = type.GetProperties().Select(GetTypeFieldInfo).ToList(),
+                DefaultItem = Activator.CreateInstance(type)
             };
         }
 
