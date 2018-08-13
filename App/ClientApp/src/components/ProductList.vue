@@ -16,12 +16,14 @@
     </b-list-group-item>
 
     <b-modal
-      v-if="selectedProduct"
-      id="deleteProductModal"
+      :visible="!!selectedProduct"
       title="Delete item"
-      @ok="deleteSelectedProduct"
+      @ok="onDeleteModalOk"
+      @cancel="onDeleteModalCancel"
     >
-      <p>Are you sure you want to delete product "{{ selectedProduct.name }}"?</p>
+      <p v-if="selectedProduct">
+        Are you sure you want to delete product "{{ selectedProduct.name }}"?
+      </p>
     </b-modal>
   </b-list-group>
 </template>
@@ -46,12 +48,14 @@ export default {
     },
     confirmDelete(product) {
       this.selectedProduct = product
-      this.$root.$emit('bv::show::modal', 'deleteProductModal')
     },
-    async deleteSelectedProduct() {
+    async onDeleteModalOk() {
       await api.products.delete(this.selectedProduct.id)
       const index = this.products.findIndex(p => p.id == this.selectedProduct.id)
       this.products.splice(index, 1)
+      this.selectedProduct = null
+    },
+    onDeleteModalCancel() {
       this.selectedProduct = null
     }
   }
