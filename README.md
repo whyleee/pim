@@ -3,6 +3,24 @@ Simple product information mangement app.
 
 http://pim-pn.azurewebsites.net
 
+## Features
+- Basic create/update/delete flow
+- Supported fields:
+  - Checkbox
+  - Datetime
+  - Select many (checkbox list)
+  - Select one (select list)
+  - Text
+  - Textarea
+- Complex types:
+  - Nested object
+  - Table
+- UI features:
+  - Tabs
+  - Validation
+  - Unsaved changes indicator
+  - Page leave alert on unsaved changes
+
 ## License
 
 Copyright (C) 2018-present Pavlo Niezhentsev
