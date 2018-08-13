@@ -131,6 +131,12 @@ export default {
       },
       set(value) {
         const { dateTime } = this
+
+        if (value.HH == dateTime.getHours() &&
+          value.mm == dateTime.getMinutes()) {
+          return
+        }
+
         dateTime.setHours(value.HH)
         dateTime.setMinutes(value.mm)
         this.dateTime = dateTime
@@ -144,7 +150,7 @@ export default {
         return new Date(this.value)
       },
       set(value) {
-        this.value = value ? value.toISOString() : null
+        this.value = value ? this.getIsoDate(value) : null
       }
     },
     prettyDateTime() {
@@ -184,24 +190,31 @@ export default {
     }
   },
   created() {
-    Validator.extend('pretty_date_format', {
-      getMessage: field => `The ${field} field must be in format ${DATE_FORMAT}.`,
-      validate: (value) => {
-        if (!value) {
-          return true
-        }
-        const parsedDate = this.parsePrettyDate(value)
-        return isValidDate(parsedDate)
-      }
-    })
+    this.registerDateFormatValidator()
+    this.inputValue = this.getPrettyDate(this.value)
   },
   methods: {
+    registerDateFormatValidator() {
+      Validator.extend('pretty_date_format', {
+        getMessage: field => `The ${field} field must be in format ${DATE_FORMAT}.`,
+        validate: (value) => {
+          if (!value) {
+            return true
+          }
+          const parsedDate = this.parsePrettyDate(value)
+          return isValidDate(parsedDate)
+        }
+      })
+    },
     getPrettyDate(date) {
       if (!date) {
         return ''
       }
       return formatDate(date, DATE_FORMAT)
         .replace('at 00:00', '')
+    },
+    getIsoDate(date) {
+      return `${date.toISOString().slice(0, -5)}Z`
     },
     parsePrettyDate(value, baseDate) {
       const parseFormat = value.indexOf(' at ') >= 0 ? DATE_FORMAT : NOTIME_FORMAT
