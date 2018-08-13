@@ -79,7 +79,7 @@
       </template>
     </b-table>
 
-    <ItemFieldTableModal
+    <TableFieldModal
       ref="itemModal"
       :title="modalTitle"
       :item="modalItem"
@@ -93,11 +93,11 @@
 
 <script>
 import { format as formatDate } from 'date-fns/esm'
-import ItemFieldTableModal from './ItemFieldTableModal.vue'
+import TableFieldModal from './TableFieldModal.vue'
 
 export default {
   components: {
-    ItemFieldTableModal
+    TableFieldModal
   },
   props: {
     item: {

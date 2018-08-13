@@ -57,7 +57,7 @@
         </div>
 
         <b-card-body class="header-fields">
-          <ItemField
+          <Field
             v-for="field in headerFields"
             :key="field.name"
             :item="form"
@@ -75,7 +75,7 @@
             :key="tabName"
             :title="tabName"
           >
-            <ItemField
+            <Field
               v-for="field in fields"
               :key="field.name"
               :item="form"
@@ -91,11 +91,11 @@
 
 <script>
 import api from '@/lib/api'
-import ItemField from '@/components/fields/ItemField.vue'
+import Field from '@/components/fields/Field.vue'
 
 export default {
   components: {
-    ItemField
+    Field
   },
   $_veeValidate: {
     validator: 'new'

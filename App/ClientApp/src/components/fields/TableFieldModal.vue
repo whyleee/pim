@@ -10,7 +10,7 @@
       :data-vv-scope="vvScope"
       @submit.prevent="onOk"
     >
-      <ItemField
+      <Field
         v-for="field in meta.fields"
         :key="field.name"
         :item="item"

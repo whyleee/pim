@@ -1,7 +1,7 @@
 <template>
   <div v-if="field.complexType && field.type == 'array'">
     <h5>{{ field.attributes.displayName }}</h5>
-    <ItemFieldTable
+    <TableField
       :item="item"
       :orig-item="origItem"
       :field="field"
@@ -10,7 +10,7 @@
 
   <div v-else-if="field.complexType">
     <h5>{{ field.attributes.displayName }}</h5>
-    <ItemField
+    <Field
       v-for="innerField in field.complexType.fields"
       :key="innerField.name"
       :item="item[field.name]"
@@ -39,23 +39,23 @@
 
 <script>
 import Vue from 'vue'
-import ItemFieldCheckbox from './ItemFieldCheckbox.vue'
-import ItemFieldDate from './ItemFieldDate.vue'
-import ItemFieldSelectMany from './ItemFieldSelectMany.vue'
-import ItemFieldSelectOne from './ItemFieldSelectOne.vue'
-import ItemFieldTable from './ItemFieldTable.vue'
-import ItemFieldText from './ItemFieldText.vue'
-import ItemFieldTextarea from './ItemFieldTextarea.vue'
+import CheckboxField from './CheckboxField.vue'
+import DateField from './DateField.vue'
+import SelectManyField from './SelectManyField.vue'
+import SelectOneField from './SelectOneField.vue'
+import TableField from './TableField.vue'
+import TextField from './TextField.vue'
+import TextareaField from './TextareaField.vue'
 
-export default Vue.component('ItemField', {
+export default Vue.component('Field', {
   components: {
-    ItemFieldCheckbox,
-    ItemFieldDate,
-    ItemFieldSelectMany,
-    ItemFieldSelectOne,
-    ItemFieldTable,
-    ItemFieldText,
-    ItemFieldTextarea
+    CheckboxField,
+    DateField,
+    SelectManyField,
+    SelectOneField,
+    TableField,
+    TextField,
+    TextareaField
   },
   inject: ['$validator'],
   props: {
@@ -91,24 +91,24 @@ export default Vue.component('ItemField', {
     },
     fieldComponent() {
       if (this.field.type == 'bool') {
-        return ItemFieldCheckbox
+        return CheckboxField
       }
       if (this.field.type == 'datetime') {
-        return ItemFieldDate
+        return DateField
       }
       if (this.field.type == 'array') {
-        return ItemFieldSelectMany
+        return SelectManyField
       }
       if (this.field.type == 'string') {
         if (this.field.kind == 'MultilineText') {
-          return ItemFieldTextarea
+          return TextareaField
         }
         if (this.field.attributes.selectOptions) {
-          return ItemFieldSelectOne
+          return SelectOneField
         }
       }
 
-      return ItemFieldText
+      return TextField
     }
   }
 })
