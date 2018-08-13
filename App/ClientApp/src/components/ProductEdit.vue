@@ -6,10 +6,57 @@
     Loading...
   </div>
   <div v-else>
-    <h1>{{ title }}</h1>
     <b-form @submit.prevent="onFormSubmit">
       <b-card no-body>
         <div slot="header">
+          <b-row align-v="center">
+            <b-col>
+              <h1>{{ title }}</h1>
+            </b-col>
+            <b-col class="text-right">
+              <b-button
+                v-if="hasErrors"
+                variant="link"
+                class="text-danger mr-3"
+                @click="toggleErrorSummary"
+              >
+                {{ errorSummaryVisible ? 'Hide' : 'Show' }} errors
+              </b-button>
+
+              <span
+                v-if="hasPendingChanges && !hasErrors"
+                class="text-success align-middle mr-3"
+              >
+                Pending changes
+              </span>
+
+              <b-button
+                :disabled="saveButtonDisabled"
+                :variant="saveButtonVariant"
+                type="submit"
+              >
+                {{ submitButtonText }}
+              </b-button>
+            </b-col>
+          </b-row>
+
+          <b-alert
+            :show="errorSummaryVisible"
+            :fade="false"
+            variant="danger"
+          >
+            <ul>
+              <li
+                v-for="error in summaryErrors"
+                :key="error.id"
+              >
+                {{ error.msg }}
+              </li>
+            </ul>
+          </b-alert>
+        </div>
+
+        <b-card-body class="header-fields">
           <ItemField
             v-for="field in headerFields"
             :key="field.name"
@@ -17,7 +64,7 @@
             :orig-item="origItem"
             :field="field"
           />
-        </div>
+        </b-card-body>
 
         <b-tabs
           card
@@ -37,30 +84,6 @@
             />
           </b-tab>
         </b-tabs>
-
-        <div slot="footer">
-          <b-alert
-            :show="summaryErrors.length > 0"
-            :fade="false"
-            variant="danger"
-          >
-            <ul>
-              <li
-                v-for="error in summaryErrors"
-                :key="error.id"
-              >
-                {{ error.msg }}
-              </li>
-            </ul>
-          </b-alert>
-
-          <b-button
-            type="submit"
-            variant="dark"
-          >
-            {{ submitButtonText }}
-          </b-button>
-        </div>
       </b-card>
     </b-form>
   </div>
@@ -91,7 +114,8 @@ export default {
       product: null,
       form: {},
       origItem: null,
-      loading: true
+      loading: true,
+      errorSummaryVisible: false
     }
   },
   computed: {
@@ -119,6 +143,23 @@ export default {
     },
     summaryErrors() {
       return this.errors.items.filter(err => !err.scope)
+    },
+    hasErrors() {
+      return this.summaryErrors.length > 0
+    },
+    hasPendingChanges() {
+      return JSON.stringify(this.form) != JSON.stringify(this.origItem)
+    },
+    saveButtonVariant() {
+      if (this.hasErrors) {
+        return 'danger'
+      } else if (this.hasPendingChanges) {
+        return 'success'
+      }
+      return undefined
+    },
+    saveButtonDisabled() {
+      return this.hasErrors || !this.hasPendingChanges
     }
   },
   async created() {
@@ -155,7 +196,17 @@ export default {
       }
 
       this.$router.push({ name: 'home' })
+    },
+    toggleErrorSummary() {
+      this.errorSummaryVisible = !this.errorSummaryVisible
     }
   }
 }
 </script>
+
+<style scoped>
+.header-fields {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding-bottom: 0;
+}
+</style>
