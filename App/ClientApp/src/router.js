@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Home from '@/views/Home.vue'
-import Product from '@/views/Product.vue'
+import ProductEdit from '@/components/ProductEdit.vue'
 
 Vue.use(Router)
 
@@ -16,8 +16,7 @@ export default new Router({
     {
       path: '/:id',
       name: 'product',
-      component: Product,
-      props: true
+      component: ProductEdit
     }
   ]
 })

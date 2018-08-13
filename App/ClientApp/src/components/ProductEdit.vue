@@ -100,12 +100,6 @@ export default {
   $_veeValidate: {
     validator: 'new'
   },
-  props: {
-    productId: {
-      type: String,
-      default: undefined
-    }
-  },
   data() {
     return {
       meta: {
@@ -119,6 +113,10 @@ export default {
     }
   },
   computed: {
+    productId() {
+      const { id } = this.$route.params
+      return id != 'new' ? id : null
+    },
     title() {
       return this.product ? this.product.name : 'New Product'
     },
@@ -173,6 +171,8 @@ export default {
     this.form = JSON.parse(JSON.stringify(this.origItem))
 
     this.loading = false
+
+    window.onbeforeunload = () => this.hasPendingChanges || null
   },
   methods: {
     async fetchMeta() {
@@ -199,6 +199,19 @@ export default {
     },
     toggleErrorSummary() {
       this.errorSummaryVisible = !this.errorSummaryVisible
+    }
+  },
+  beforeRouteLeave(to, from, next) {
+    if (!this.hasPendingChanges) {
+      next()
+      return
+    }
+
+    const answer = window.confirm('Changes you made may not be saved.')
+    if (answer) {
+      next()
+    } else {
+      next(false)
     }
   }
 }
