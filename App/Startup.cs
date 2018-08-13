@@ -43,7 +43,8 @@ namespace App
             services.AddSingleton<IMongoDatabase>(s => s.GetService<IMongoClient>().GetDatabase(mongoUrl.DatabaseName));
 
             // app
-            services.AddSingleton<IValueStore, MongoValueStore>();
+            services.AddSingleton<IProductStore, MongoProductStore>();
+            services.AddSingleton<MetadataProvider>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
