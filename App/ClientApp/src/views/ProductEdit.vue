@@ -195,6 +195,7 @@ export default {
         await api.products.post(this.form)
       }
 
+      this.origItem = this.form
       this.$router.push({ name: 'home' })
     },
     toggleErrorSummary() {
