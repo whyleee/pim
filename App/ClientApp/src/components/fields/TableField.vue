@@ -20,14 +20,14 @@
       striped
       hover
     >
-      <div
+      <template
         v-for="field in field.complexType.fields"
         slot-scope="{ value }"
-        :key="field.name"
         :slot="field.name"
       >
         <a
           v-if="field.type == 'string' && field.kind == 'Url'"
+          :key="field.name"
           :href="value"
         >
           {{ value }}
@@ -35,12 +35,14 @@
 
         <img
           v-else-if="field.type == 'string' && field.kind == 'ImageUrl'"
+          :key="field.name"
           :src="value"
           class="img-thumbnail"
         >
 
         <template v-else-if="field.type == 'bool'">
           <b-form-checkbox
+            :key="field.name"
             :checked="value"
             disabled
           />
@@ -55,7 +57,7 @@
         </template>
 
         <template v-else>{{ value }}</template>
-      </div>
+      </template>
 
       <template
         slot="actions"

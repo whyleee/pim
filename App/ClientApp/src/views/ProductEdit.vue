@@ -208,6 +208,7 @@ export default {
       return
     }
 
+    // eslint-disable-next-line no-alert
     const answer = window.confirm('Changes you made may not be saved.')
     if (answer) {
       next()
