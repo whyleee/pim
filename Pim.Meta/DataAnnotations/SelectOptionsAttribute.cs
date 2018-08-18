@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
-namespace App.Models.Scheme.DataAnnotations
+namespace Pim.Meta.DataAnnotations
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
     public class SelectOptionsAttribute : Attribute

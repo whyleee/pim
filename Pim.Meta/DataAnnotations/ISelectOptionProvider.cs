@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace App.Models.Scheme.DataAnnotations
+namespace Pim.Meta.DataAnnotations
 {
     public interface ISelectOptionProvider
     {

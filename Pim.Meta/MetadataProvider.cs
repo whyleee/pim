@@ -6,11 +6,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using App.Models.Scheme;
-using App.Models.Scheme.DataAnnotations;
+using Pim.Meta.DataAnnotations;
 
-namespace App.Business.Data
+namespace Pim.Meta
 {
     public class MetadataProvider
     {
@@ -38,7 +36,7 @@ namespace App.Business.Data
                 ? prop.PropertyType.GetGenericArguments().First()
                 : prop.PropertyType;
 
-            if (itemType.Namespace.StartsWith("App.Models"))
+            if (!IsSimpleType(itemType))
             {
                 field.ComplexType = GetTypeInfo(itemType);
             }
@@ -128,6 +126,29 @@ namespace App.Business.Data
             }
 
             return type.Name;
+        }
+
+        private bool IsSimpleType(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                type = type.GetGenericArguments().Single();
+            }
+
+            var systemSimpleTypes = new[]
+            {
+                typeof(DateTime),
+                typeof(DateTimeOffset),
+                typeof(Decimal),
+                typeof(Enum),
+                typeof(Guid),
+                typeof(String),
+                typeof(TimeSpan)
+            };
+
+            return type.IsPrimitive ||
+                systemSimpleTypes.Contains(type) ||
+                Convert.GetTypeCode(type) != TypeCode.Object;
         }
 
         private bool IsCollection(Type type)
