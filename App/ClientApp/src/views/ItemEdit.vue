@@ -91,6 +91,7 @@
 
 <script>
 import api from '@/lib/api'
+import store from '@/store'
 import Field from '@/components/fields/Field.vue'
 
 export default {
@@ -182,7 +183,7 @@ export default {
   },
   methods: {
     async fetchMeta() {
-      this.meta = await api.meta.get(this.backend.key, 'item')
+      this.meta = await store.fetchMeta(this.backend.key, 'item')
     },
     async fetchData() {
       this.item = await api.data.getById(this.backend.key, this.itemId)

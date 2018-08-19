@@ -53,6 +53,10 @@ namespace Pim.Meta
 
             foreach (var attr in attrs)
             {
+                if (attr is KeyAttribute)
+                {
+                    dict.Add("key", true);
+                }
                 if (attr is ReadOnlyAttribute)
                 {
                     dict.Add("readonly", true);

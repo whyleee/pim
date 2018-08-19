@@ -13,9 +13,9 @@
       <b-list-group flush>
         <b-list-group-item
           v-for="item in items"
-          :key="item.id"
+          :key="item[keyName]"
         >
-          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item.id }}">
+          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item[keyName] }}">
             {{ item.name }}
           </b-link>
           <b-link
@@ -43,6 +43,7 @@
 
 <script>
 import api from '@/lib/api'
+import store from '@/store'
 
 export default {
   props: {
@@ -53,14 +54,32 @@ export default {
   },
   data() {
     return {
+      meta: {
+        fields: []
+      },
       items: [],
       selectedItem: null
     }
   },
+  computed: {
+    keyName() {
+      const keyField = this.meta.fields.find(field =>
+        Object.entries(field.attributes)
+          .some(([key, value]) => key == 'key' && value))
+
+      return keyField ? keyField.name : 'id'
+    }
+  },
   async created() {
-    await this.fetchData()
+    await Promise.all([
+      this.fetchMeta(),
+      this.fetchData()
+    ])
   },
   methods: {
+    async fetchMeta() {
+      this.meta = await store.fetchMeta(this.backend.key, 'item')
+    },
     async fetchData() {
       this.items = await api.data.get(this.backend.key)
     },
@@ -68,8 +87,10 @@ export default {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      await api.data.delete(this.backend.key, this.selectedItem.id)
-      const index = this.items.findIndex(p => p.id == this.selectedItem.id)
+      await api.data.delete(this.backend.key, this.selectedItem[this.keyName])
+      const index = this.items.findIndex(i =>
+        i[this.keyName] == this.selectedItem[this.keyName])
+
       this.items.splice(index, 1)
       this.selectedItem = null
     },
