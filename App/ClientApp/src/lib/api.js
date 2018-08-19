@@ -1,30 +1,44 @@
 import axios from 'axios'
+import config from '@/config'
 
-const apiUrl = '/api'
+function getBackend(key) {
+  return config.backends.find(b => b.key == key)
+}
 
 export default {
   meta: {
-    url: `${apiUrl}/meta`,
-    get(itemType) {
-      return axios.get(`${this.url}/${itemType}`)
+    url(backend) {
+      return getBackend(backend).meta.url
+    },
+    async get(backend, itemType) {
+      const response = await axios.get(`${this.url(backend)}/${itemType}`)
+      return response.data
     }
   },
-  products: {
-    baseUrl: `${apiUrl}/products`,
-    get() {
-      return axios.get(this.baseUrl)
+  data: {
+    url(backend) {
+      return getBackend(backend).data.url
     },
-    getById(id) {
-      return axios.get(`${this.baseUrl}/${id}`)
+    async get(backend) {
+      const response = await axios.get(this.url(backend))
+      const { collectionItemsProperty } = getBackend(backend).data
+
+      return collectionItemsProperty
+        ? response.data[collectionItemsProperty]
+        : response.data
     },
-    post(product) {
-      return axios.post(this.baseUrl, product)
+    async getById(backend, id) {
+      const response = await axios.get(`${this.url(backend)}/${id}`)
+      return response.data
     },
-    put(id, product) {
-      return axios.put(`${this.baseUrl}/${id}`, product)
+    post(backend, item) {
+      return axios.post(this.url(backend), item)
     },
-    delete(id) {
-      return axios.delete(`${this.baseUrl}/${id}`)
+    put(backend, id, item) {
+      return axios.put(`${this.url(backend)}/${id}`, item)
+    },
+    delete(backend, id) {
+      return axios.delete(`${this.url(backend)}/${id}`)
     }
   }
 }

@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h1>Products</h1>
+    <h1>{{ backend.title }}</h1>
     <b-card no-body>
       <div slot="header">
         <b-button-toolbar>
           <b-button-group>
-            <b-btn :to="{ name: 'product', params: { id: 'new' }}">New</b-btn>
+            <b-btn :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}">New</b-btn>
           </b-button-group>
         </b-button-toolbar>
       </div>
@@ -15,7 +15,7 @@
           v-for="product in products"
           :key="product.id"
         >
-          <b-link :to="{ name: 'product', params: { id: product.id }}">
+          <b-link :to="{ name: `${backend.key}-edit`, params: { id: product.id }}">
             {{ product.name }}
           </b-link>
           <b-link
@@ -45,6 +45,12 @@
 import api from '@/lib/api'
 
 export default {
+  props: {
+    backend: {
+      type: Object,
+      required: true
+    }
+  },
   data() {
     return {
       products: [],
@@ -56,14 +62,13 @@ export default {
   },
   methods: {
     async fetchData() {
-      const response = await api.products.get()
-      this.products = response.data
+      this.products = await api.data.get(this.backend.key)
     },
     confirmDelete(product) {
       this.selectedProduct = product
     },
     async onDeleteModalOk() {
-      await api.products.delete(this.selectedProduct.id)
+      await api.data.delete(this.backend.key, this.selectedProduct.id)
       const index = this.products.findIndex(p => p.id == this.selectedProduct.id)
       this.products.splice(index, 1)
       this.selectedProduct = null

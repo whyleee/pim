@@ -100,6 +100,12 @@ export default {
   $_veeValidate: {
     validator: 'new'
   },
+  props: {
+    backend: {
+      type: Object,
+      required: true
+    }
+  },
   data() {
     return {
       meta: {
@@ -118,7 +124,7 @@ export default {
       return id != 'new' ? id : null
     },
     title() {
-      return this.product ? this.product.name : 'New Product'
+      return this.product ? this.product.name : 'New Item'
     },
     submitButtonText() {
       return this.productId ? 'Save' : 'Create'
@@ -176,12 +182,10 @@ export default {
   },
   methods: {
     async fetchMeta() {
-      const response = await api.meta.get('product')
-      this.meta = response.data
+      this.meta = await api.meta.get(this.backend.key, 'product')
     },
     async fetchData() {
-      const response = await api.products.getById(this.productId)
-      this.product = response.data
+      this.product = await api.data.getById(this.backend.key, this.productId)
     },
     async onFormSubmit() {
       const ok = await this.$validator.validate()
@@ -190,13 +194,13 @@ export default {
       }
 
       if (this.productId) {
-        await api.products.put(this.productId, this.form)
+        await api.data.put(this.backend.key, this.productId, this.form)
       } else {
-        await api.products.post(this.form)
+        await api.data.post(this.backend.key, this.form)
       }
 
       this.origItem = this.form
-      this.$router.push({ name: 'home' })
+      this.$router.push({ name: `${this.backend.key}-list` })
     },
     toggleErrorSummary() {
       this.errorSummaryVisible = !this.errorSummaryVisible

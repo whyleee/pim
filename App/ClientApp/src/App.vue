@@ -2,7 +2,7 @@
   <div id="app">
     <Navbar/>
     <b-container>
-      <router-view/>
+      <router-view :key="$route.path"/>
     </b-container>
   </div>
 </template>
