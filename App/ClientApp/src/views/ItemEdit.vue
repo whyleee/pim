@@ -97,6 +97,15 @@
           </b-tab>
         </b-tabs>
       </b-card>
+
+      <b-modal
+        :visible="!!backendError"
+        title="Backend error"
+        ok-only
+        @ok="onBackendErrorModalOk"
+      >
+        <div v-html="backendError"/>
+      </b-modal>
     </b-form>
   </div>
 </template>
@@ -129,7 +138,8 @@ export default {
       origItem: null,
       loading: true,
       loadingHtml: '&nbsp;',
-      errorSummaryVisible: false
+      errorSummaryVisible: false,
+      backendError: null
     }
   },
   computed: {
@@ -213,17 +223,37 @@ export default {
         return
       }
 
-      if (this.itemId) {
-        await api.data.put(this.backend.key, this.itemId, this.form)
-      } else {
-        await api.data.post(this.backend.key, this.form)
-      }
+      try {
+        if (this.itemId) {
+          await api.data.put(this.backend.key, this.itemId, this.form)
+        } else {
+          await api.data.post(this.backend.key, this.form)
+        }
 
-      this.origItem = this.form
-      this.$router.push({ name: `${this.backend.key}-list` })
+        this.origItem = this.form
+        this.$router.push({ name: `${this.backend.key}-list` })
+      } catch (error) {
+        if (error.response && error.response.data) {
+          const errorData = error.response.data
+
+          if (typeof errorData == 'string') {
+            this.backendError = errorData
+          } else {
+            this.backendError =
+              `<ul>
+                ${Object.values(errorData).map(message => `<li>${message}</li>`)}
+              </ul>`
+          }
+        } else {
+          this.backendError = error
+        }
+      }
     },
     toggleErrorSummary() {
       this.errorSummaryVisible = !this.errorSummaryVisible
+    },
+    onBackendErrorModalOk() {
+      this.backendError = null
     }
   },
   beforeRouteLeave(to, from, next) {
