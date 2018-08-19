@@ -12,28 +12,28 @@
 
       <b-list-group flush>
         <b-list-group-item
-          v-for="product in products"
-          :key="product.id"
+          v-for="item in items"
+          :key="item.id"
         >
-          <b-link :to="{ name: `${backend.key}-edit`, params: { id: product.id }}">
-            {{ product.name }}
+          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item.id }}">
+            {{ item.name }}
           </b-link>
           <b-link
             class="float-right"
-            @click.stop="confirmDelete(product)"
+            @click.stop="confirmDelete(item)"
           >
             Delete
           </b-link>
         </b-list-group-item>
 
         <b-modal
-          :visible="!!selectedProduct"
+          :visible="!!selectedItem"
           title="Delete item"
           @ok="onDeleteModalOk"
           @cancel="onDeleteModalCancel"
         >
-          <p v-if="selectedProduct">
-            Are you sure you want to delete product "{{ selectedProduct.name }}"?
+          <p v-if="selectedItem">
+            Are you sure you want to delete item "{{ selectedItem.name }}"?
           </p>
         </b-modal>
       </b-list-group>
@@ -53,8 +53,8 @@ export default {
   },
   data() {
     return {
-      products: [],
-      selectedProduct: null
+      items: [],
+      selectedItem: null
     }
   },
   async created() {
@@ -62,19 +62,19 @@ export default {
   },
   methods: {
     async fetchData() {
-      this.products = await api.data.get(this.backend.key)
+      this.items = await api.data.get(this.backend.key)
     },
-    confirmDelete(product) {
-      this.selectedProduct = product
+    confirmDelete(item) {
+      this.selectedItem = item
     },
     async onDeleteModalOk() {
-      await api.data.delete(this.backend.key, this.selectedProduct.id)
-      const index = this.products.findIndex(p => p.id == this.selectedProduct.id)
-      this.products.splice(index, 1)
-      this.selectedProduct = null
+      await api.data.delete(this.backend.key, this.selectedItem.id)
+      const index = this.items.findIndex(p => p.id == this.selectedItem.id)
+      this.items.splice(index, 1)
+      this.selectedItem = null
     },
     onDeleteModalCancel() {
-      this.selectedProduct = null
+      this.selectedItem = null
     }
   }
 }

@@ -111,7 +111,7 @@ export default {
       meta: {
         fields: []
       },
-      product: null,
+      item: null,
       form: {},
       origItem: null,
       loading: true,
@@ -119,15 +119,15 @@ export default {
     }
   },
   computed: {
-    productId() {
+    itemId() {
       const { id } = this.$route.params
       return id != 'new' ? id : null
     },
     title() {
-      return this.product ? this.product.name : 'New Item'
+      return this.item ? this.item.name : 'New Item'
     },
     submitButtonText() {
-      return this.productId ? 'Save' : 'Create'
+      return this.itemId ? 'Save' : 'Create'
     },
     headerFields() {
       return this.meta.fields
@@ -169,11 +169,11 @@ export default {
   async created() {
     await this.fetchMeta()
 
-    if (this.productId) {
+    if (this.itemId) {
       await this.fetchData()
     }
 
-    this.origItem = this.product || this.meta.defaultItem
+    this.origItem = this.item || this.meta.defaultItem
     this.form = JSON.parse(JSON.stringify(this.origItem))
 
     this.loading = false
@@ -182,10 +182,10 @@ export default {
   },
   methods: {
     async fetchMeta() {
-      this.meta = await api.meta.get(this.backend.key, 'product')
+      this.meta = await api.meta.get(this.backend.key, 'item')
     },
     async fetchData() {
-      this.product = await api.data.getById(this.backend.key, this.productId)
+      this.item = await api.data.getById(this.backend.key, this.itemId)
     },
     async onFormSubmit() {
       const ok = await this.$validator.validate()
@@ -193,8 +193,8 @@ export default {
         return
       }
 
-      if (this.productId) {
-        await api.data.put(this.backend.key, this.productId, this.form)
+      if (this.itemId) {
+        await api.data.put(this.backend.key, this.itemId, this.form)
       } else {
         await api.data.post(this.backend.key, this.form)
       }

@@ -30,7 +30,7 @@ namespace App.Controllers
 
         private Type ResolveType(ItemType itemType)
         {
-            if (itemType == ItemType.Product)
+            if (itemType == ItemType.Item)
             {
                 return typeof(Product);
             }
