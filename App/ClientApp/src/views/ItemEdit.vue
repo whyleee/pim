@@ -1,13 +1,24 @@
 <template>
-  <div
-    v-if="loading"
-    class="text-center lead"
-  >
-    Loading...
-  </div>
-  <div v-else>
+  <div>
     <b-form @submit.prevent="onFormSubmit">
-      <b-card no-body>
+      <b-card
+        v-if="loading"
+        no-body
+      >
+        <div slot="header">
+          <h1>&nbsp;</h1>
+        </div>
+        <b-card-body>
+          <div
+            class="text-center lead"
+            v-html="loadingHtml"
+          />
+        </b-card-body>
+      </b-card>
+      <b-card
+        v-else
+        no-body
+      >
         <div slot="header">
           <b-row align-v="center">
             <b-col>
@@ -67,6 +78,7 @@
         </b-card-body>
 
         <b-tabs
+          v-if="Object.keys(tabs).length > 0"
           card
           no-fade
         >
@@ -116,6 +128,7 @@ export default {
       form: {},
       origItem: null,
       loading: true,
+      loadingHtml: '&nbsp;',
       errorSummaryVisible: false
     }
   },
@@ -168,11 +181,17 @@ export default {
     }
   },
   async created() {
-    await this.fetchMeta()
+    setTimeout(() => {
+      this.loadingHtml = 'Loading...'
+    }, 50)
+
+    const tasks = [this.fetchMeta()]
 
     if (this.itemId) {
-      await this.fetchData()
+      tasks.push(this.fetchData())
     }
+
+    await Promise.all(tasks)
 
     this.origItem = this.item || this.meta.defaultItem
     this.form = JSON.parse(JSON.stringify(this.origItem))

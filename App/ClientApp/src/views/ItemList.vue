@@ -1,16 +1,30 @@
 <template>
   <div>
-    <h1>{{ backend.title }}</h1>
     <b-card no-body>
       <div slot="header">
-        <b-button-toolbar>
-          <b-button-group>
-            <b-btn :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}">New</b-btn>
-          </b-button-group>
-        </b-button-toolbar>
+        <b-row align-v="center">
+          <b-col>
+            <h1>{{ backend.title }}</h1>
+          </b-col>
+          <b-col class="text-right">
+            <b-button :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}">
+              New
+            </b-button>
+          </b-col>
+        </b-row>
       </div>
 
-      <b-list-group flush>
+      <b-card-body v-if="loading">
+        <div
+          class="text-center lead"
+          v-html="loadingHtml"
+        />
+      </b-card-body>
+
+      <b-list-group
+        v-else
+        flush
+      >
         <b-list-group-item
           v-for="item in items"
           :key="item[keyName]"
@@ -58,7 +72,9 @@ export default {
         fields: []
       },
       items: [],
-      selectedItem: null
+      selectedItem: null,
+      loading: true,
+      loadingHtml: '&nbsp;'
     }
   },
   computed: {
@@ -71,10 +87,16 @@ export default {
     }
   },
   async created() {
+    setTimeout(() => {
+      this.loadingHtml = 'Loading...'
+    }, 50)
+
     await Promise.all([
       this.fetchMeta(),
       this.fetchData()
     ])
+
+    this.loading = false
   },
   methods: {
     async fetchMeta() {
