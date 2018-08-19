@@ -3,8 +3,8 @@ import Router from 'vue-router'
 import config from '@/config'
 
 import Home from '@/views/Home.vue'
-import ProductList from '@/views/ProductList.vue'
-import ProductEdit from '@/views/ProductEdit.vue'
+import ItemList from '@/views/ItemList.vue'
+import ItemEdit from '@/views/ItemEdit.vue'
 
 Vue.use(Router)
 
@@ -20,14 +20,14 @@ config.backends.forEach((backend) => {
   routes.push({
     path: `/${backend.key}`,
     name: `${backend.key}-list`,
-    component: ProductList,
+    component: ItemList,
     props: {
       backend
     }
   }, {
     path: `/${backend.key}/:id`,
     name: `${backend.key}-edit`,
-    component: ProductEdit,
+    component: ItemEdit,
     props: {
       backend
     }
