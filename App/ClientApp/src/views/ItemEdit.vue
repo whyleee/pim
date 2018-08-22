@@ -1,30 +1,24 @@
 <template>
   <div>
     <b-form @submit.prevent="onFormSubmit">
-      <b-card
-        v-if="loading"
-        no-body
-      >
-        <div slot="header">
-          <h1>&nbsp;</h1>
-        </div>
-        <b-card-body>
-          <div
-            class="text-center lead"
-            v-html="loadingHtml"
-          />
-        </b-card-body>
-      </b-card>
-      <b-card
-        v-else
-        no-body
-      >
+      <b-card no-body>
         <div slot="header">
           <b-row align-v="center">
             <b-col>
               <h1>{{ title }}</h1>
             </b-col>
-            <b-col class="text-right">
+
+            <b-col
+              v-if="!hasAccessToApi"
+              class="text-right"
+            >
+              <Authorize :backend="backend"/>
+            </b-col>
+
+            <b-col
+              v-else
+              class="text-right"
+            >
               <b-button
                 v-if="hasErrors"
                 variant="link"
@@ -67,35 +61,50 @@
           </b-alert>
         </div>
 
-        <b-card-body class="header-fields">
-          <Field
-            v-for="field in headerFields"
-            :key="field.name"
-            :item="form"
-            :orig-item="origItem"
-            :field="field"
+        <b-card-body v-if="!hasAccessToApi">
+          <div class="text-center lead">
+            Backend is secured, please authorize.
+          </div>
+        </b-card-body>
+
+        <b-card-body v-else-if="loading">
+          <div
+            class="text-center lead"
+            v-html="loadingHtml"
           />
         </b-card-body>
 
-        <b-tabs
-          v-if="Object.keys(tabs).length > 0"
-          card
-          no-fade
-        >
-          <b-tab
-            v-for="[tabName, fields] in Object.entries(tabs)"
-            :key="tabName"
-            :title="tabName"
-          >
+        <template v-else>
+          <b-card-body class="header-fields">
             <Field
-              v-for="field in fields"
+              v-for="field in headerFields"
               :key="field.name"
               :item="form"
               :orig-item="origItem"
               :field="field"
             />
-          </b-tab>
-        </b-tabs>
+          </b-card-body>
+
+          <b-tabs
+            v-if="Object.keys(tabs).length > 0"
+            card
+            no-fade
+          >
+            <b-tab
+              v-for="[tabName, fields] in Object.entries(tabs)"
+              :key="tabName"
+              :title="tabName"
+            >
+              <Field
+                v-for="field in fields"
+                :key="field.name"
+                :item="form"
+                :orig-item="origItem"
+                :field="field"
+              />
+            </b-tab>
+          </b-tabs>
+        </template>
       </b-card>
 
       <b-modal
@@ -111,12 +120,13 @@
 </template>
 
 <script>
-import api from '@/lib/api'
 import store from '@/store'
+import Authorize from '@/components/Authorize.vue'
 import Field from '@/components/fields/Field.vue'
 
 export default {
   components: {
+    Authorize,
     Field
   },
   $_veeValidate: {
@@ -129,12 +139,11 @@ export default {
     }
   },
   data() {
+    store.setBackend(this.backend)
     return {
-      meta: {
-        fields: []
-      },
+      store: store.backend,
       item: null,
-      form: {},
+      form: null,
       origItem: null,
       loading: true,
       loadingHtml: '&nbsp;',
@@ -143,22 +152,34 @@ export default {
     }
   },
   computed: {
+    hasAccessToApi() {
+      return !this.backend.authHeader || this.store.apiKey
+    },
     itemId() {
       const { id } = this.$route.params
       return id != 'new' ? id : null
     },
     title() {
-      return this.item ? this.item.name : 'New Item'
+      if (!this.hasAccessToApi) {
+        return this.backend.title
+      }
+      if (this.loading) {
+        return ' '
+      }
+      if (this.item) {
+        return this.item.name
+      }
+      return 'New Item'
     },
     submitButtonText() {
       return this.itemId ? 'Save' : 'Create'
     },
     headerFields() {
-      return this.meta.fields
+      return this.store.meta.fields
         .filter(f => f.attributes.groupName == 'Header' && !f.attributes.readonly)
     },
     tabs() {
-      return this.meta.fields.reduce((tabs, field) => {
+      return this.store.meta.fields.reduce((tabs, field) => {
         const groupName = field.attributes.groupName || 'Content'
 
         if (groupName != 'Header') {
@@ -190,32 +211,41 @@ export default {
       return this.hasErrors || !this.hasPendingChanges
     }
   },
-  async created() {
-    setTimeout(() => {
-      this.loadingHtml = 'Loading...'
-    }, 50)
-
-    const tasks = [this.fetchMeta()]
-
-    if (this.itemId) {
-      tasks.push(this.fetchData())
+  watch: {
+    hasAccessToApi(yes) {
+      if (yes) {
+        this.load()
+      }
     }
-
-    await Promise.all(tasks)
-
-    this.origItem = this.item || this.meta.defaultItem
-    this.form = JSON.parse(JSON.stringify(this.origItem))
-
-    this.loading = false
-
-    window.onbeforeunload = () => this.hasPendingChanges || null
+  },
+  async created() {
+    if (this.hasAccessToApi) {
+      this.load()
+    }
   },
   methods: {
-    async fetchMeta() {
-      this.meta = await store.fetchMeta(this.backend.key, 'item')
+    async load() {
+      setTimeout(() => {
+        this.loadingHtml = 'Loading...'
+      }, 50)
+
+      const tasks = [this.store.fetchMeta()]
+
+      if (this.itemId) {
+        tasks.push(this.fetchItem())
+      }
+
+      await Promise.all(tasks)
+
+      this.origItem = this.item || this.store.meta.defaultItem
+      this.form = JSON.parse(JSON.stringify(this.origItem))
+
+      this.loading = false
+
+      window.onbeforeunload = () => this.hasPendingChanges || null
     },
-    async fetchData() {
-      this.item = await api.data.getById(this.backend.key, this.itemId)
+    async fetchItem() {
+      this.item = await this.store.getItem(this.itemId)
     },
     async onFormSubmit() {
       const ok = await this.$validator.validate()
@@ -225,9 +255,9 @@ export default {
 
       try {
         if (this.itemId) {
-          await api.data.put(this.backend.key, this.itemId, this.form)
+          await this.store.updateItem(this.itemId, this.form)
         } else {
-          await api.data.post(this.backend.key, this.form)
+          await this.store.createItem(this.form)
         }
 
         this.origItem = this.form

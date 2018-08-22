@@ -7,14 +7,27 @@
             <h1>{{ backend.title }}</h1>
           </b-col>
           <b-col class="text-right">
-            <b-button :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}">
+            <Authorize
+              v-if="!hasAccessToApi"
+              :backend="backend"
+            />
+            <b-button
+              v-else
+              :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}"
+            >
               New
             </b-button>
           </b-col>
         </b-row>
       </div>
 
-      <b-card-body v-if="loading">
+      <b-card-body v-if="!hasAccessToApi">
+        <div class="text-center lead">
+          Backend is secured, please authorize.
+        </div>
+      </b-card-body>
+
+      <b-card-body v-else-if="loading">
         <div
           class="text-center lead"
           v-html="loadingHtml"
@@ -26,10 +39,10 @@
         flush
       >
         <b-list-group-item
-          v-for="item in items"
-          :key="item[keyName]"
+          v-for="item in store.listItems"
+          :key="item[store.keyName]"
         >
-          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item[keyName] }}">
+          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item[store.keyName] }}">
             {{ item.name }}
           </b-link>
           <b-link
@@ -56,10 +69,13 @@
 </template>
 
 <script>
-import api from '@/lib/api'
 import store from '@/store'
+import Authorize from '@/components/Authorize.vue'
 
 export default {
+  components: {
+    Authorize
+  },
   props: {
     backend: {
       type: Object,
@@ -67,53 +83,53 @@ export default {
     }
   },
   data() {
+    store.setBackend(this.backend)
     return {
-      meta: {
-        fields: []
-      },
-      items: [],
+      store: store.backend,
       selectedItem: null,
       loading: true,
       loadingHtml: '&nbsp;'
     }
   },
   computed: {
-    keyName() {
-      const keyField = this.meta.fields.find(field =>
-        Object.entries(field.attributes)
-          .some(([key, value]) => key == 'key' && value))
-
-      return keyField ? keyField.name : 'id'
+    hasAccessToApi() {
+      return !this.backend.authHeader || this.store.apiKey
     }
   },
-  async created() {
-    setTimeout(() => {
-      this.loadingHtml = 'Loading...'
-    }, 50)
-
-    await Promise.all([
-      this.fetchMeta(),
-      this.fetchData()
-    ])
-
-    this.loading = false
+  watch: {
+    hasAccessToApi(yes) {
+      if (yes) {
+        this.load()
+      }
+    }
+  },
+  created() {
+    if (this.hasAccessToApi) {
+      this.load()
+    }
   },
   methods: {
-    async fetchMeta() {
-      this.meta = await store.fetchMeta(this.backend.key, 'item')
-    },
-    async fetchData() {
-      this.items = await api.data.get(this.backend.key)
+    async load() {
+      if (!this.loading) {
+        return
+      }
+
+      setTimeout(() => {
+        this.loadingHtml = 'Loading...'
+      }, 50)
+
+      await Promise.all([
+        this.store.fetchMeta(),
+        this.store.fetchListItems()
+      ])
+
+      this.loading = false
     },
     confirmDelete(item) {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      await api.data.delete(this.backend.key, this.selectedItem[this.keyName])
-      const index = this.items.findIndex(i =>
-        i[this.keyName] == this.selectedItem[this.keyName])
-
-      this.items.splice(index, 1)
+      await this.store.deleteItem(this.selectedItem[this.store.keyName])
       this.selectedItem = null
     },
     onDeleteModalCancel() {

@@ -1,44 +1,55 @@
 import axios from 'axios'
-import config from '@/config'
-
-function getBackend(key) {
-  return config.backends.find(b => b.key == key)
-}
 
 export default {
-  meta: {
-    url(backend) {
-      return getBackend(backend).meta.url
-    },
-    async get(backend, itemType) {
-      const response = await axios.get(`${this.url(backend)}/${itemType}`)
-      return response.data
-    }
-  },
-  data: {
-    url(backend) {
-      return getBackend(backend).data.url
-    },
-    async get(backend) {
-      const response = await axios.get(this.url(backend))
-      const { collectionItemsProperty } = getBackend(backend).data
+  create(backend) {
+    const http = axios.create()
 
-      return collectionItemsProperty
-        ? response.data[collectionItemsProperty]
-        : response.data
-    },
-    async getById(backend, id) {
-      const response = await axios.get(`${this.url(backend)}/${id}`)
-      return response.data
-    },
-    post(backend, item) {
-      return axios.post(this.url(backend), item)
-    },
-    put(backend, id, item) {
-      return axios.put(`${this.url(backend)}/${id}`, item)
-    },
-    delete(backend, id) {
-      return axios.delete(`${this.url(backend)}/${id}`)
+    return {
+      getApiKey() {
+        return http.defaults.headers.common[backend.authHeader]
+      },
+      setApiKey(apiKey) {
+        if (!backend.authHeader) {
+          throw new Error(`Backend ${backend.key} doesn't require api key`)
+        }
+
+        http.defaults.headers.common[backend.authHeader] = apiKey
+      },
+      meta: {
+        url() {
+          return backend.meta.url
+        },
+        async get() {
+          const response = await http.get(`${this.url()}/item`)
+          return response.data
+        }
+      },
+      data: {
+        url() {
+          return backend.data.url
+        },
+        async get() {
+          const response = await http.get(this.url())
+          const { collectionItemsProperty } = backend.data
+
+          return collectionItemsProperty
+            ? response.data[collectionItemsProperty]
+            : response.data
+        },
+        async getById(id) {
+          const response = await http.get(`${this.url()}/${id}`)
+          return response.data
+        },
+        post(item) {
+          return http.post(this.url(), item)
+        },
+        put(id, item) {
+          return http.put(`${this.url()}/${id}`, item)
+        },
+        delete(id) {
+          return http.delete(`${this.url()}/${id}`)
+        }
+      }
     }
   }
 }
