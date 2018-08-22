@@ -6,9 +6,9 @@
     <Authors>Pavlo Niezhentsev</Authors>
     <Product>pim</Product>
     <Description>Metadata provider for pim app.</Description>
-    <Copyright>Copyright (C) 2018-present Pavlo Niezhentsev</Copyright>
+    <Copyright>Copyright (c) 2018-present Pavlo Niezhentsev</Copyright>
     <PackageProjectUrl>http://pim-pn.azurewebsites.net</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/whyleee/pim/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl>https://github.com/whyleee/pim/blob/master/Pim.Meta/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/whyleee/pim</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
