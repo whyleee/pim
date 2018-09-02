@@ -1,7 +1,5 @@
 # pim
-Simple edit UI for your backend.
-
-http://pim-pn.azurewebsites.net
+Simple edit UI for your backend. http://pim-pn.azurewebsites.net
 
 ![Screenshot](https://github.com/whyleee/pim/blob/master/screenshot.jpg)
 
