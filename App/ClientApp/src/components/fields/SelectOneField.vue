@@ -48,7 +48,8 @@ export default {
     },
     validators() {
       return {
-        required: !!this.field.attributes.required
+        required: !!this.field.attributes.required,
+        included: [this.options.map(opt => opt.value)]
       }
     },
     errorSelector() {
