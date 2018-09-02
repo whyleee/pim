@@ -48,10 +48,13 @@ function getKeyName(meta) {
 
 function createBackend(config) {
   const api = apiFactory.create(config)
-  const apiKey = apiKeyStore.getApiKey(config.key)
 
-  if (apiKey) {
-    api.setApiKey(apiKey)
+  if (config.authHeader) {
+    const apiKey = apiKeyStore.getApiKey(config.key)
+
+    if (apiKey) {
+      api.setApiKey(apiKey)
+    }
   }
 
   return {
