@@ -49,7 +49,7 @@ namespace Pim.Meta
             var attrs = prop.GetCustomAttributes();
             var dict = new Dictionary<string, object>();
 
-            dict.Add("displayName", ToSentenceCase(prop.Name));
+            dict.Add("displayName", Helpers.ToSentenceCase(prop.Name));
 
             foreach (var attr in attrs)
             {
@@ -91,6 +91,12 @@ namespace Pim.Meta
                 }
             }
 
+            if (prop.PropertyType.IsEnum && !dict.ContainsKey("selectOptions"))
+            {
+                var optionProvider = new EnumSelectOptionProvider(prop.PropertyType);
+                dict.Add("selectOptions", optionProvider.GetOptions());
+            }
+
             return dict;
         }
 
@@ -104,7 +110,7 @@ namespace Pim.Meta
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (type == typeof(string))
+            if (type == typeof(string) || type.IsEnum)
             {
                 return "string";
             }
@@ -151,6 +157,7 @@ namespace Pim.Meta
             };
 
             return type.IsPrimitive ||
+                type.IsEnum ||
                 systemSimpleTypes.Contains(type) ||
                 Convert.GetTypeCode(type) != TypeCode.Object;
         }
@@ -158,11 +165,6 @@ namespace Pim.Meta
         private bool IsCollection(Type type)
         {
             return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
-        }
-
-        private string ToSentenceCase(string str)
-        {
-            return Regex.Replace(str, "[a-z][A-Z]", m => $"{m.Value[0]} {char.ToLower(m.Value[1])}");
         }
     }
 }
