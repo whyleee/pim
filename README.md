@@ -1,7 +1,9 @@
 # pim
-Simple product information mangement app.
+Simple edit UI for your backend.
 
 http://pim-pn.azurewebsites.net
+
+![Screenshot](https://github.com/whyleee/pim/blob/master/screenshot.jpg)
 
 ## Features
 - Basic create/update/delete flow
