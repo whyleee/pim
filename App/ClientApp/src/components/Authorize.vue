@@ -45,7 +45,7 @@ export default {
       this.$refs.authModal.show()
     },
     onAuthSubmit() {
-      this.store.setApiKey(this.authModalApiKey)
+      this.store.apiKey = this.authModalApiKey
       this.authModalApiKey = null
     }
   }

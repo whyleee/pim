@@ -1,5 +1,18 @@
 import apiFactory from '@/lib/api'
 
+const apiKeyStore = {
+  getApiKey(backendKey) {
+    return localStorage.getItem(`${backendKey}-apiKey`)
+  },
+  setApiKey(backendKey, apiKey) {
+    if (apiKey) {
+      localStorage.setItem(`${backendKey}-apiKey`, apiKey)
+    } else {
+      localStorage.removeItem(`${backendKey}-apiKey`)
+    }
+  }
+}
+
 function getKeyName(meta) {
   const keyField = meta.fields.find(field =>
     Object.entries(field.attributes)
@@ -10,18 +23,26 @@ function getKeyName(meta) {
 
 function createBackend(config) {
   const api = apiFactory.create(config)
+  const apiKey = apiKeyStore.getApiKey(config.key)
+
+  if (apiKey) {
+    api.setApiKey(apiKey)
+  }
 
   return {
     config,
-    apiKey: null,
     meta: null,
     keyName: null,
     listItems: null,
 
-    setApiKey(apiKey) {
-      api.setApiKey(apiKey)
-      this.apiKey = apiKey
+    get apiKey() {
+      return apiKeyStore.getApiKey(this.config.key)
     },
+    set apiKey(value) {
+      apiKeyStore.setApiKey(this.config.key, value)
+      api.setApiKey(value)
+    },
+
     async fetchMeta() {
       if (!this.meta) {
         this.meta = await api.meta.get()
