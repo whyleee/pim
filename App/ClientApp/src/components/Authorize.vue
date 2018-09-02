@@ -1,9 +1,9 @@
 <template>
-  <div>
+  <div class="d-inline-block ml-1">
     <b-button
       @click="onAuthClick"
     >
-      Authorize
+      {{ buttonText }}
     </b-button>
 
     <b-modal
@@ -37,6 +37,11 @@ export default {
       store: store.backend,
       authModalVisible: false,
       authModalApiKey: null
+    }
+  },
+  computed: {
+    buttonText() {
+      return this.store.apiKey ? 'Edit key' : 'Authorize'
     }
   },
   methods: {

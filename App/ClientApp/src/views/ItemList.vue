@@ -7,13 +7,11 @@
             <h1>{{ backend.title }}</h1>
           </b-col>
           <b-col class="text-right">
-            <Authorize
-              v-if="!hasAccessToApi"
-              :backend="backend"
-            />
+            <Authorize/>
             <b-button
-              v-else
+              v-if="hasAccessToApi"
               :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}"
+              class="ml-1"
             >
               New
             </b-button>
