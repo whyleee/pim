@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import config from '@/config'
+import config from '@/config.json'
 
 export default {
   data() {
