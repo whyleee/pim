@@ -1,7 +1,7 @@
 # pim
 Simple edit UI for your backend. http://pim-pn.azurewebsites.net
 
-![Screenshot](https://github.com/whyleee/pim/blob/master/screenshot.jpg)
+![Screenshot](https://raw.githubusercontent.com/whyleee/pim/master/screenshot-1.jpg)
 
 ## Features
 - Basic create/update/delete flow
