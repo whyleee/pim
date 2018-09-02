@@ -1,96 +1,112 @@
 <template>
-  <b-card
-    :border-variant="isModified ? 'success' : null"
-    class="mb-3"
-    no-body
-  >
-    <div slot="header">
-      <b-btn
-        size="sm"
-        @click.prevent="onAddClick"
-      >
-        Add
-      </b-btn>
-    </div>
-
-    <b-table
-      v-if="model.length"
-      :items="model"
-      :fields="columns"
-      striped
-      hover
+  <div>
+    <b-card
+      :border-variant="stateVariant"
+      class="mb-3"
+      no-body
     >
-      <template
-        v-for="field in field.complexType.fields"
-        slot-scope="{ value }"
-        :slot="field.name"
+      <div slot="header">
+        <b-btn
+          size="sm"
+          @click.prevent="onAddClick"
+        >
+          Add
+        </b-btn>
+      </div>
+
+      <b-table
+        v-if="model.length"
+        :items="model"
+        :fields="columns"
+        striped
+        hover
       >
-        <a
-          v-if="field.type == 'string' && field.kind == 'Url'"
-          :key="field.name"
-          :href="value"
+        <template
+          v-for="field in field.complexType.fields"
+          slot-scope="{ value }"
+          :slot="field.name"
         >
-          {{ value }}
-        </a>
-
-        <img
-          v-else-if="field.type == 'string' && field.kind == 'ImageUrl'"
-          :key="field.name"
-          :src="value"
-          class="img-thumbnail"
-        >
-
-        <template v-else-if="field.type == 'bool'">
-          <b-form-checkbox
+          <a
+            v-if="field.type == 'string' && field.kind == 'Url'"
             :key="field.name"
-            :checked="value"
-            disabled
-          />
-        </template>
-
-        <template v-else-if="field.type == 'datetime'">
-          {{ formatDate(value, 'MMMM D, YYYY') }}
-        </template>
-
-        <template v-else-if="field.type == 'array'">
-          {{ getSelectedOptions(field, value).map(x => x.text).join(', ') }}
-        </template>
-
-        <template v-else>{{ value }}</template>
-      </template>
-
-      <template
-        slot="actions"
-        slot-scope="row"
-      >
-        <div class="text-right">
-          <b-btn
-            size="sm"
-            class="mr-1"
-            @click.prevent="onEditClick(row.item, row.index)"
+            :href="value"
           >
-            Edit
-          </b-btn>
-          <b-btn
-            size="sm"
-            @click.prevent="removeItem(row.index)"
-          >
-            Remove
-          </b-btn>
-        </div>
-      </template>
-    </b-table>
+            {{ value }}
+          </a>
 
-    <TableFieldModal
-      ref="itemModal"
-      :title="modalTitle"
-      :item="modalItem"
-      :orig-item="origModalItem"
-      :meta="field.complexType"
-      @ok="saveModalItem"
-      @cancel="resetEditingRow"
-    />
-  </b-card>
+          <img
+            v-else-if="field.type == 'string' && field.kind == 'ImageUrl'"
+            :key="field.name"
+            :src="value"
+            class="img-thumbnail"
+          >
+
+          <template v-else-if="field.type == 'bool'">
+            <b-form-checkbox
+              :key="field.name"
+              :checked="value"
+              disabled
+            />
+          </template>
+
+          <template v-else-if="field.type == 'datetime'">
+            {{ formatDate(value, 'MMMM D, YYYY') }}
+          </template>
+
+          <template v-else-if="field.type == 'array'">
+            {{ getSelectedOptions(field, value).map(x => x.text).join(', ') }}
+          </template>
+
+          <template v-else>{{ value }}</template>
+        </template>
+
+        <template
+          slot="actions"
+          slot-scope="row"
+        >
+          <div class="text-right">
+            <b-btn
+              size="sm"
+              class="mr-1"
+              @click.prevent="onEditClick(row.item, row.index)"
+            >
+              Edit
+            </b-btn>
+            <b-btn
+              size="sm"
+              @click.prevent="removeItem(row.index)"
+            >
+              Remove
+            </b-btn>
+          </div>
+        </template>
+      </b-table>
+
+      <TableFieldModal
+        ref="itemModal"
+        :title="modalTitle"
+        :item="modalItem"
+        :orig-item="origModalItem"
+        :meta="field.complexType"
+        @ok="saveModalItem"
+        @cancel="resetEditingRow"
+      />
+    </b-card>
+
+    <input
+      v-validate="validators"
+      v-model="model"
+      :name="field.name"
+      :data-vv-as="field.attributes.displayName"
+      type="hidden"
+    >
+    <div
+      v-if="errorMessage"
+      class="invalid-feedback d-block"
+    >
+      {{ errorMessage }}
+    </div>
+  </div>
 </template>
 
 <script>
@@ -98,6 +114,7 @@ import { format as formatDate } from 'date-fns/esm'
 import TableFieldModal from './TableFieldModal.vue'
 
 export default {
+  inject: ['$validator'],
   components: {
     TableFieldModal
   },
@@ -140,6 +157,23 @@ export default {
     },
     modalTitle() {
       return this.editingRowIndex >= 0 ? 'Edit' : 'Add'
+    },
+    validators() {
+      return {
+        required: !!this.field.attributes.required
+      }
+    },
+    errorMessage() {
+      return this.errors.first(this.field.name)
+    },
+    stateVariant() {
+      if (this.errors.has(this.field.name)) {
+        return 'danger'
+      }
+      if (this.isModified) {
+        return 'success'
+      }
+      return null
     },
     isModified() {
       if (this.model.length != this.origModel.length) {
