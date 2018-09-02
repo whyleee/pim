@@ -5,7 +5,7 @@
     :type="type"
     :name="field.name"
     :step="step"
-    :readonly="field.attributes.readonly"
+    :readonly="readonly"
     :data-vv-as="field.attributes.displayName"
     :state="state"
   />
@@ -38,7 +38,13 @@ export default {
         return this.item[this.field.name]
       },
       set(value) {
-        this.item[this.field.name] = value
+        let parsed = value
+
+        if (this.type == 'number') {
+          parsed = Number(value)
+        }
+
+        this.item[this.field.name] = parsed || value
       }
     },
     origValue() {
@@ -56,10 +62,16 @@ export default {
       }
       return undefined
     },
+    readonly() {
+      return this.field.attributes.readonly ||
+        (this.field.attributes.constant && this.origValue != null)
+    },
     validators() {
       const { range, required, regex } = this.field.attributes
       return {
         required: !!required,
+        numeric: this.field.type == 'integer',
+        decimal: this.field.type == 'number',
         regex,
         url: this.field.kind == 'Url' || this.field.kind == 'ImageUrl' ? [true] : false,
         between: range ? [range.min, range.max] : false

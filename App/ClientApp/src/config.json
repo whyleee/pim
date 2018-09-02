@@ -1,0 +1,14 @@
+{
+  "backends": [
+    {
+      "key": "products",
+      "title": "Products",
+      "meta": {
+        "url": "/api/meta"
+      },
+      "data": {
+        "url": "/api/products"
+      }
+    }
+  ]
+}

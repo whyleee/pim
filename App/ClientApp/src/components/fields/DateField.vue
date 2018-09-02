@@ -68,6 +68,7 @@ import {
 } from '@fortawesome/free-regular-svg-icons'
 import { Validator } from 'vee-validate'
 
+const ISO_DATE_FORMAT = 'yyyy-MM-dd\'T\'HH:mm:ss'
 const DATE_FORMAT = 'MMMM d, yyyy \'at\' HH:mm'
 const NOTIME_FORMAT = 'MMMM d, yyyy'
 
@@ -98,7 +99,8 @@ export default {
   },
   data() {
     return {
-      inputValue: null
+      inputValue: null,
+      isUtc: false
     }
   },
   computed: {
@@ -192,6 +194,10 @@ export default {
   created() {
     this.registerDateFormatValidator()
     this.inputValue = this.getPrettyDate(this.value)
+
+    if (this.value && this.value.endsWith('Z')) {
+      this.isUtc = true
+    }
   },
   methods: {
     registerDateFormatValidator() {
@@ -214,7 +220,10 @@ export default {
         .replace('at 00:00', '')
     },
     getIsoDate(date) {
-      return `${date.toISOString().slice(0, -5)}Z`
+      if (this.isUtc) {
+        return `${date.toISOString().slice(0, -5)}Z`
+      }
+      return formatDate(date, ISO_DATE_FORMAT)
     },
     parsePrettyDate(value, baseDate) {
       const parseFormat = value.indexOf(' at ') >= 0 ? DATE_FORMAT : NOTIME_FORMAT

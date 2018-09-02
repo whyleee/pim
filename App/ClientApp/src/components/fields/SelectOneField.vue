@@ -4,7 +4,7 @@
     v-model="value"
     :name="field.name"
     :options="options"
-    :disabled="field.attributes.readonly"
+    :disabled="readonly"
     :data-vv-as="field.attributes.displayName"
     :state="state"
   />
@@ -46,9 +46,14 @@ export default {
     options() {
       return this.field.attributes.selectOptions
     },
+    readonly() {
+      return this.field.attributes.readonly ||
+        (this.field.attributes.constant && this.origValue != null)
+    },
     validators() {
       return {
-        required: !!this.field.attributes.required
+        required: !!this.field.attributes.required,
+        included: this.options.map(opt => opt.value)
       }
     },
     errorSelector() {

@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using App.Business.Data;
 using App.Models;
-using App.Models.Scheme;
 using Microsoft.AspNetCore.Mvc;
+using Pim.Meta;
 
 namespace App.Controllers
 {
@@ -31,7 +30,7 @@ namespace App.Controllers
 
         private Type ResolveType(ItemType itemType)
         {
-            if (itemType == ItemType.Product)
+            if (itemType == ItemType.Item)
             {
                 return typeof(Product);
             }

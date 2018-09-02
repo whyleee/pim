@@ -2,17 +2,20 @@
   <div id="app">
     <Navbar/>
     <b-container>
-      <router-view/>
+      <router-view :key="$route.path"/>
     </b-container>
+    <Error/>
   </div>
 </template>
 
 <script>
 import Navbar from '@/components/Navbar.vue'
+import Error from '@/components/Error.vue'
 
 export default {
   components: {
-    Navbar
+    Navbar,
+    Error
   }
 }
 </script>

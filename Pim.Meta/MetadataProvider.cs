@@ -5,12 +5,9 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using App.Models.Scheme;
-using App.Models.Scheme.DataAnnotations;
+using Pim.Meta.DataAnnotations;
 
-namespace App.Business.Data
+namespace Pim.Meta
 {
     public class MetadataProvider
     {
@@ -38,7 +35,7 @@ namespace App.Business.Data
                 ? prop.PropertyType.GetGenericArguments().First()
                 : prop.PropertyType;
 
-            if (itemType.Namespace.StartsWith("App.Models"))
+            if (!IsSimpleType(itemType))
             {
                 field.ComplexType = GetTypeInfo(itemType);
             }
@@ -51,25 +48,40 @@ namespace App.Business.Data
             var attrs = prop.GetCustomAttributes();
             var dict = new Dictionary<string, object>();
 
-            dict.Add("displayName", ToSentenceCase(prop.Name));
+            dict["displayName"] = Helpers.ToSentenceCase(prop.Name);
 
             foreach (var attr in attrs)
             {
+                if (attr is KeyAttribute)
+                {
+                    dict["key"] = true;
+                }
                 if (attr is ReadOnlyAttribute)
                 {
-                    dict.Add("readonly", true);
+                    dict["readonly"] = true;
+                }
+                if (attr is EditableAttribute editable && !editable.AllowEdit)
+                {
+                    if (editable.AllowInitialValue)
+                    {
+                        dict["constant"] = true;
+                    }
+                    else
+                    {
+                        dict["readonly"] = true;
+                    }
                 }
                 if (attr is RequiredAttribute)
                 {
-                    dict.Add("required", true);
+                    dict["required"] = true;
                 }
                 if (attr is RangeAttribute range)
                 {
-                    dict.Add("range", new { Min = range.Minimum, Max = range.Maximum });
+                    dict["range"] = new { Min = range.Minimum, Max = range.Maximum };
                 }
                 if (attr is RegularExpressionAttribute regex)
                 {
-                    dict.Add("regex", regex.Pattern);
+                    dict["regex"] = regex.Pattern;
                 }
                 if (attr is DisplayAttribute display)
                 {
@@ -79,14 +91,20 @@ namespace App.Business.Data
                     }
                     if (!string.IsNullOrEmpty(display.GroupName))
                     {
-                        dict.Add("groupName", display.GroupName);
+                        dict["groupName"] = display.GroupName;
                     }
                 }
                 if (attr is SelectOptionsAttribute selectOptions)
                 {
                     var optionProvider = (ISelectOptionProvider) Activator.CreateInstance(selectOptions.OptionProvider);
-                    dict.Add("selectOptions", optionProvider.GetOptions());
+                    dict["selectOptions"] = optionProvider.GetOptions();
                 }
+            }
+
+            if (prop.PropertyType.IsEnum && !dict.ContainsKey("selectOptions"))
+            {
+                var optionProvider = new EnumSelectOptionProvider(prop.PropertyType);
+                dict["selectOptions"] = optionProvider.GetOptions();
             }
 
             return dict;
@@ -102,7 +120,7 @@ namespace App.Business.Data
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (type == typeof(string))
+            if (type == typeof(string) || type.IsEnum)
             {
                 return "string";
             }
@@ -130,14 +148,33 @@ namespace App.Business.Data
             return type.Name;
         }
 
+        private bool IsSimpleType(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                type = type.GetGenericArguments().Single();
+            }
+
+            var systemSimpleTypes = new[]
+            {
+                typeof(DateTime),
+                typeof(DateTimeOffset),
+                typeof(Decimal),
+                typeof(Enum),
+                typeof(Guid),
+                typeof(String),
+                typeof(TimeSpan)
+            };
+
+            return type.IsPrimitive ||
+                type.IsEnum ||
+                systemSimpleTypes.Contains(type) ||
+                Convert.GetTypeCode(type) != TypeCode.Object;
+        }
+
         private bool IsCollection(Type type)
         {
             return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
-        }
-
-        private string ToSentenceCase(string str)
-        {
-            return Regex.Replace(str, "[a-z][A-Z]", m => $"{m.Value[0]} {char.ToLower(m.Value[1])}");
         }
     }
 }
