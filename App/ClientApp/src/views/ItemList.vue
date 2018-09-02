@@ -7,7 +7,9 @@
             <h1>{{ backend.title }}</h1>
           </b-col>
           <b-col class="text-right">
-            <Authorize/>
+            <Authorize
+              v-if="requiresApiKey"
+            />
             <b-button
               v-if="hasAccessToApi"
               :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}"
@@ -90,13 +92,17 @@ export default {
     }
   },
   computed: {
+    requiresApiKey() {
+      return this.backend.authHeader
+    },
     hasAccessToApi() {
-      return !this.backend.authHeader || this.store.apiKey
+      return !this.requiresApiKey || !!this.store.apiKey
     }
   },
   watch: {
-    hasAccessToApi(yes) {
-      if (yes) {
+    // eslint-disable-next-line object-shorthand
+    'store.apiKey'(value) {
+      if (value) {
         this.load()
       }
     }
@@ -108,10 +114,6 @@ export default {
   },
   methods: {
     async load() {
-      if (!this.loading) {
-        return
-      }
-
       setTimeout(() => {
         this.loadingHtml = 'Loading...'
       }, 50)

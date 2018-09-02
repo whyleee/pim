@@ -1,5 +1,30 @@
 import apiFactory from '@/lib/api'
 
+const backends = {}
+const store = {
+  backend: null,
+  error: null,
+
+  setBackend(config) {
+    if (!backends[config.key]) {
+      // eslint-disable-next-line no-use-before-define
+      backends[config.key] = createBackend(config)
+    }
+
+    this.backend = backends[config.key]
+  }
+}
+
+async function catchError(func) {
+  try {
+    const result = await func()
+    return result
+  } catch (e) {
+    store.error = e
+    throw e
+  }
+}
+
 const apiKeyStore = {
   getApiKey(backendKey) {
     return localStorage.getItem(`${backendKey}-apiKey`)
@@ -45,24 +70,24 @@ function createBackend(config) {
 
     async fetchMeta() {
       if (!this.meta) {
-        this.meta = await api.meta.get()
+        this.meta = await catchError(() => api.meta.get())
         this.keyName = getKeyName(this.meta)
       }
     },
     async fetchListItems() {
-      this.listItems = await api.data.get()
+      this.listItems = await catchError(() => api.data.get())
     },
     getItem(id) {
-      return api.data.getById(id)
+      return catchError(() => api.data.getById(id))
     },
     createItem(data) {
-      return api.data.post(data)
+      return catchError(() => api.data.post(data))
     },
     updateItem(id, data) {
-      return api.data.put(id, data)
+      return catchError(() => api.data.put(id, data))
     },
     async deleteItem(id) {
-      await api.data.delete(id)
+      await catchError(() => api.data.delete(id))
 
       const index = this.listItems.findIndex(i => i[this.keyName] == id)
       this.listItems.splice(index, 1)
@@ -70,16 +95,4 @@ function createBackend(config) {
   }
 }
 
-const backends = {}
-
-export default {
-  backend: null,
-
-  setBackend(config) {
-    if (!backends[config.key]) {
-      backends[config.key] = createBackend(config)
-    }
-
-    this.backend = backends[config.key]
-  }
-}
+export default store
