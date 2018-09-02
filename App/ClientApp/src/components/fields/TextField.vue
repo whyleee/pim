@@ -38,7 +38,13 @@ export default {
         return this.item[this.field.name]
       },
       set(value) {
-        this.item[this.field.name] = value
+        let parsed = value
+
+        if (this.type == 'number') {
+          parsed = Number(value)
+        }
+
+        this.item[this.field.name] = parsed || value
       }
     },
     origValue() {
@@ -60,6 +66,8 @@ export default {
       const { range, required, regex } = this.field.attributes
       return {
         required: !!required,
+        numeric: this.field.type == 'integer',
+        decimal: this.field.type == 'number',
         regex,
         url: this.field.kind == 'Url' || this.field.kind == 'ImageUrl' ? [true] : false,
         between: range ? [range.min, range.max] : false
