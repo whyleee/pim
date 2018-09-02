@@ -4,7 +4,7 @@
     v-model="model"
     :name="field.name"
     :options="options"
-    :disabled="field.attributes.readonly"
+    :disabled="readonly"
     :data-vv-as="field.attributes.displayName"
     :state="state"
     stacked
@@ -46,6 +46,10 @@ export default {
     },
     options() {
       return this.field.attributes.selectOptions
+    },
+    readonly() {
+      return this.field.attributes.readonly ||
+        (this.field.attributes.constant && this.origModel.length > 0)
     },
     validators() {
       return {

@@ -5,7 +5,7 @@
     :type="type"
     :name="field.name"
     :step="step"
-    :readonly="field.attributes.readonly"
+    :readonly="readonly"
     :data-vv-as="field.attributes.displayName"
     :state="state"
   />
@@ -61,6 +61,10 @@ export default {
         return 1
       }
       return undefined
+    },
+    readonly() {
+      return this.field.attributes.readonly ||
+        (this.field.attributes.constant && this.origValue != null)
     },
     validators() {
       const { range, required, regex } = this.field.attributes

@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Pim.Meta.DataAnnotations;
 
 namespace Pim.Meta
@@ -49,29 +48,40 @@ namespace Pim.Meta
             var attrs = prop.GetCustomAttributes();
             var dict = new Dictionary<string, object>();
 
-            dict.Add("displayName", Helpers.ToSentenceCase(prop.Name));
+            dict["displayName"] = Helpers.ToSentenceCase(prop.Name);
 
             foreach (var attr in attrs)
             {
                 if (attr is KeyAttribute)
                 {
-                    dict.Add("key", true);
+                    dict["key"] = true;
                 }
                 if (attr is ReadOnlyAttribute)
                 {
-                    dict.Add("readonly", true);
+                    dict["readonly"] = true;
+                }
+                if (attr is EditableAttribute editable && !editable.AllowEdit)
+                {
+                    if (editable.AllowInitialValue)
+                    {
+                        dict["constant"] = true;
+                    }
+                    else
+                    {
+                        dict["readonly"] = true;
+                    }
                 }
                 if (attr is RequiredAttribute)
                 {
-                    dict.Add("required", true);
+                    dict["required"] = true;
                 }
                 if (attr is RangeAttribute range)
                 {
-                    dict.Add("range", new { Min = range.Minimum, Max = range.Maximum });
+                    dict["range"] = new { Min = range.Minimum, Max = range.Maximum };
                 }
                 if (attr is RegularExpressionAttribute regex)
                 {
-                    dict.Add("regex", regex.Pattern);
+                    dict["regex"] = regex.Pattern;
                 }
                 if (attr is DisplayAttribute display)
                 {
@@ -81,20 +91,20 @@ namespace Pim.Meta
                     }
                     if (!string.IsNullOrEmpty(display.GroupName))
                     {
-                        dict.Add("groupName", display.GroupName);
+                        dict["groupName"] = display.GroupName;
                     }
                 }
                 if (attr is SelectOptionsAttribute selectOptions)
                 {
                     var optionProvider = (ISelectOptionProvider) Activator.CreateInstance(selectOptions.OptionProvider);
-                    dict.Add("selectOptions", optionProvider.GetOptions());
+                    dict["selectOptions"] = optionProvider.GetOptions();
                 }
             }
 
             if (prop.PropertyType.IsEnum && !dict.ContainsKey("selectOptions"))
             {
                 var optionProvider = new EnumSelectOptionProvider(prop.PropertyType);
-                dict.Add("selectOptions", optionProvider.GetOptions());
+                dict["selectOptions"] = optionProvider.GetOptions();
             }
 
             return dict;

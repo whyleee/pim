@@ -3,7 +3,7 @@
     v-validate="validators"
     v-model="value"
     :name="field.name"
-    :readonly="field.attributes.readonly"
+    :readonly="readonly"
     :data-vv-as="field.attributes.displayName"
     :state="state"
     rows="3"
@@ -43,6 +43,10 @@ export default {
     },
     origValue() {
       return this.origItem[this.field.name]
+    },
+    readonly() {
+      return this.field.attributes.readonly ||
+        (this.field.attributes.constant && this.origValue != null)
     },
     validators() {
       return {
