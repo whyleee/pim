@@ -11,7 +11,45 @@ namespace Pim.Meta
 {
     public class MetadataProvider
     {
-        public ItemTypeInfo GetTypeInfo(Type type)
+        public BackendInfo GetBackendInfo(Type backendType)
+        {
+            return new BackendInfo
+            {
+                Collections = backendType.GetProperties()
+                    .Select(prop => new
+                    {
+                        Property = prop,
+                        ItemType = TryGetCollectionItemType(prop.PropertyType)
+                    })
+                    .Where(prop => prop.ItemType != null)
+                    .Select(prop => GetCollectionInfo(prop.Property, prop.ItemType))
+                    .ToList()
+            };
+        }
+
+        private CollectionInfo GetCollectionInfo(PropertyInfo collectionProp, Type itemType)
+        {
+            var name = collectionProp.GetCustomAttribute<DisplayAttribute>()?.Name
+                ?? Helpers.ToSentenceCase(collectionProp.Name);
+
+            return new CollectionInfo
+            {
+                Name = name,
+                ItemType = GetTypeInfo(itemType)
+            };
+        }
+
+        private Type TryGetCollectionItemType(Type type)
+        {
+            return new[] { type }.Union(type.GetInterfaces())
+                .Where(t => t != typeof(string) &&
+                    t.IsGenericType &&
+                    t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                .Select(t => t.GetGenericArguments().First())
+                .FirstOrDefault();
+        }
+
+        private ItemTypeInfo GetTypeInfo(Type type)
         {
             return new ItemTypeInfo
             {
