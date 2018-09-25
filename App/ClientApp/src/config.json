@@ -7,7 +7,7 @@
         "url": "/api/meta"
       },
       "data": {
-        "url": "/api/products"
+        "baseUrl": "/api"
       }
     }
   ]

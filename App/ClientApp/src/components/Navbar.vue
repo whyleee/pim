@@ -42,7 +42,7 @@ export default {
       items: config.backends.map(backend => ({
         title: backend.title,
         location: {
-          name: `${backend.key}-list`
+          name: backend.key
         }
       }))
     }

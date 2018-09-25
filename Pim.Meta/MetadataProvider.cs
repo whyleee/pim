@@ -27,26 +27,43 @@ namespace Pim.Meta
             };
         }
 
-        private CollectionInfo GetCollectionInfo(PropertyInfo collectionProp, Type itemType)
-        {
-            var name = collectionProp.GetCustomAttribute<DisplayAttribute>()?.Name
-                ?? Helpers.ToSentenceCase(collectionProp.Name);
-
-            return new CollectionInfo
-            {
-                Name = name,
-                ItemType = GetTypeInfo(itemType)
-            };
-        }
-
         private Type TryGetCollectionItemType(Type type)
         {
             return new[] { type }.Union(type.GetInterfaces())
                 .Where(t => t != typeof(string) &&
-                    t.IsGenericType &&
-                    t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                            t.IsGenericType &&
+                            t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 .Select(t => t.GetGenericArguments().First())
                 .FirstOrDefault();
+        }
+
+        private CollectionInfo GetCollectionInfo(PropertyInfo collectionProp, Type itemType)
+        {
+            return new CollectionInfo
+            {
+                Key = collectionProp.Name.ToLowerInvariant(),
+                Name = GetCollectionName(collectionProp),
+                Path = GetCollectionPath(collectionProp),
+                ItemsProperty = GetCollectionItemsProperty(collectionProp),
+                ItemType = GetTypeInfo(itemType)
+            };
+        }
+
+        private string GetCollectionName(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<DisplayAttribute>()?.Name
+                ?? Helpers.ToSentenceCase(prop.Name);
+        }
+
+        private string GetCollectionPath(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Path
+                ?? $"/{prop.Name.ToLowerInvariant()}";
+        }
+
+        private string GetCollectionItemsProperty(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty;
         }
 
         private ItemTypeInfo GetTypeInfo(Type type)

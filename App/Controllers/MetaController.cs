@@ -8,7 +8,7 @@ using Pim.Meta;
 
 namespace App.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class MetaController : ControllerBase
     {

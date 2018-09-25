@@ -20,34 +20,35 @@ export default {
           return backend.meta.url
         },
         async get() {
-          const response = await http.get(`${this.url()}/item`)
+          const response = await http.get(`${this.url()}`)
           return response.data
         }
       },
-      data: {
-        url() {
-          return backend.data.url
-        },
-        async get() {
-          const response = await http.get(this.url())
-          const { collectionItemsProperty } = backend.data
+      createDataApi(collection) {
+        return {
+          url() {
+            return `${backend.data.baseUrl}${collection.path}`
+          },
+          async get() {
+            const response = await http.get(this.url())
 
-          return collectionItemsProperty
-            ? response.data[collectionItemsProperty]
-            : response.data
-        },
-        async getById(id) {
-          const response = await http.get(`${this.url()}/${id}`)
-          return response.data
-        },
-        post(item) {
-          return http.post(this.url(), item)
-        },
-        put(id, item) {
-          return http.put(`${this.url()}/${id}`, item)
-        },
-        delete(id) {
-          return http.delete(`${this.url()}/${id}`)
+            return collection.itemsProperty
+              ? response.data[collection.itemsProperty]
+              : response.data
+          },
+          async getById(id) {
+            const response = await http.get(`${this.url()}/${id}`)
+            return response.data
+          },
+          post(item) {
+            return http.post(this.url(), item)
+          },
+          put(id, item) {
+            return http.put(`${this.url()}/${id}`, item)
+          },
+          delete(id) {
+            return http.delete(`${this.url()}/${id}`)
+          }
         }
       }
     }

@@ -7,12 +7,8 @@
             <h1>{{ backend.title }}</h1>
           </b-col>
           <b-col class="text-right">
-            <Authorize
-              v-if="requiresApiKey"
-            />
             <b-button
-              v-if="hasAccessToApi"
-              :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}"
+              :to="{ name: `${backend.key}-edit`, params: { collection: collectionKey, id: 'new' }}"
               class="ml-1"
             >
               New
@@ -21,13 +17,7 @@
         </b-row>
       </div>
 
-      <b-card-body v-if="!hasAccessToApi">
-        <div class="text-center lead">
-          Backend is secured, please authorize.
-        </div>
-      </b-card-body>
-
-      <b-card-body v-else-if="loading">
+      <b-card-body v-if="loading">
         <div
           class="text-center lead"
           v-html="loadingHtml"
@@ -39,10 +29,10 @@
         flush
       >
         <b-list-group-item
-          v-for="item in store.listItems"
-          :key="item[store.keyName]"
+          v-for="item in collection.listItems"
+          :key="item[collection.keyName]"
         >
-          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item[store.keyName] }}">
+          <b-link :to="{ name: `${backend.key}-edit`, params: { collection: collectionKey, id: item[collection.keyName] }}">
             {{ item.name }}
           </b-link>
           <b-link
@@ -70,15 +60,15 @@
 
 <script>
 import store from '@/store'
-import Authorize from '@/components/Authorize.vue'
 
 export default {
-  components: {
-    Authorize
-  },
   props: {
     backend: {
       type: Object,
+      required: true
+    },
+    collectionKey: {
+      type: String,
       required: true
     }
   },
@@ -92,25 +82,12 @@ export default {
     }
   },
   computed: {
-    requiresApiKey() {
-      return this.backend.authHeader
-    },
-    hasAccessToApi() {
-      return !this.requiresApiKey || !!this.store.apiKey
-    }
-  },
-  watch: {
-    // eslint-disable-next-line object-shorthand
-    'store.apiKey'(value) {
-      if (value) {
-        this.load()
-      }
+    collection() {
+      return this.store.collection
     }
   },
   created() {
-    if (this.hasAccessToApi) {
-      this.load()
-    }
+    this.load()
   },
   methods: {
     async load() {
@@ -118,10 +95,10 @@ export default {
         this.loadingHtml = 'Loading...'
       }, 50)
 
-      await Promise.all([
-        this.store.fetchMeta(),
-        this.store.fetchListItems()
-      ])
+      await this.store.fetchMeta()
+
+      this.store.setCollection(this.collectionKey)
+      await this.collection.fetchListItems()
 
       this.loading = false
     },
@@ -129,7 +106,8 @@ export default {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      await this.store.deleteItem(this.selectedItem[this.store.keyName])
+      const id = this.selectedItem[this.collection.keyName]
+      await this.collection.deleteItem(id)
       this.selectedItem = null
     },
     onDeleteModalCancel() {

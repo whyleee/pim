@@ -65,7 +65,10 @@ namespace App
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
-            app.UseMvc();
+            app.Map("/api", api =>
+            {
+                api.UseMvc();
+            });
 
             app.UseSpa(spa =>
             {

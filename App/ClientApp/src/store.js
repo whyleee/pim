@@ -38,16 +38,9 @@ const apiKeyStore = {
   }
 }
 
-function getKeyName(meta) {
-  const keyField = meta.fields.find(field =>
-    Object.entries(field.attributes)
-      .some(([key, value]) => key == 'key' && value))
-
-  return keyField ? keyField.name : 'id'
-}
-
 function createBackend(config) {
   const api = apiFactory.create(config)
+  const collections = {}
 
   if (config.authHeader) {
     const apiKey = apiKeyStore.getApiKey(config.key)
@@ -60,8 +53,7 @@ function createBackend(config) {
   return {
     config,
     meta: null,
-    keyName: null,
-    listItems: null,
+    collection: null,
 
     get apiKey() {
       return apiKeyStore.getApiKey(this.config.key)
@@ -74,23 +66,48 @@ function createBackend(config) {
     async fetchMeta() {
       if (!this.meta) {
         this.meta = await catchError(() => api.meta.get())
-        this.keyName = getKeyName(this.meta)
       }
     },
+    setCollection(key) {
+      if (!collections[key]) {
+        const collectionMeta = this.meta.collections.find(c => c.key == key)
+        const dataApi = api.createDataApi(collectionMeta)
+
+        // eslint-disable-next-line no-use-before-define
+        collections[key] = createCollection(collectionMeta, dataApi)
+      }
+
+      this.collection = collections[key]
+    }
+  }
+}
+
+function createCollection(meta, dataApi) {
+  return {
+    listItems: null,
+
+    get keyName() {
+      const keyField = meta.itemType.fields.find(field =>
+        Object.entries(field.attributes)
+          .some(([key, value]) => key == 'key' && value))
+
+      return keyField ? keyField.name : 'id'
+    },
+
     async fetchListItems() {
-      this.listItems = await catchError(() => api.data.get())
+      this.listItems = await catchError(() => dataApi.get())
     },
     getItem(id) {
-      return catchError(() => api.data.getById(id))
+      return catchError(() => dataApi.getById(id))
     },
     createItem(data) {
-      return catchError(() => api.data.post(data))
+      return catchError(() => dataApi.post(data))
     },
     updateItem(id, data) {
-      return catchError(() => api.data.put(id, data))
+      return catchError(() => dataApi.put(id, data))
     },
     async deleteItem(id) {
-      await catchError(() => api.data.delete(id))
+      await catchError(() => dataApi.delete(id))
 
       const index = this.listItems.findIndex(i => i[this.keyName] == id)
       this.listItems.splice(index, 1)
