@@ -4,7 +4,7 @@
       <div slot="header">
         <b-row align-v="center">
           <b-col>
-            <h1>{{ backend.title }}</h1>
+            <h1 v-html="title"/>
           </b-col>
           <b-col class="text-right">
             <b-button
@@ -84,6 +84,12 @@ export default {
   computed: {
     collection() {
       return this.store.collection
+    },
+    title() {
+      if (this.loading) {
+        return '&nbsp;'
+      }
+      return this.collection.meta.name
     }
   },
   created() {

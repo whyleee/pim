@@ -45,6 +45,7 @@ namespace App
 
             // app
             services.AddSingleton<IProductStore, MongoProductStore>();
+            services.AddSingleton<IVariantStore, MongoVariantStore>();
             services.AddSingleton<MetadataProvider>();
         }
 

@@ -5,7 +5,7 @@
         <div slot="header">
           <b-row align-v="center">
             <b-col>
-              <h1>{{ title }}</h1>
+              <h1 v-html="title"/>
             </b-col>
             <b-col class="text-right">
               <b-button
@@ -149,7 +149,7 @@ export default {
     },
     title() {
       if (this.loading) {
-        return ' '
+        return '&nbsp;'
       }
       if (this.item) {
         return this.item.name

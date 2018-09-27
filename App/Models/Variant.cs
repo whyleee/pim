@@ -64,13 +64,13 @@ namespace App.Models
         public double WeightGross { get; set; }
 
         [Display(GroupName = VariantSections.Storage)]
-        public Dimensions Dimensions { get; set; }
+        public Dimensions Dimensions { get; set; } = new Dimensions();
 
         [Display(GroupName = VariantSections.Storage)]
-        public VariantPackaging Packaging { get; set; }
+        public VariantPackaging Packaging { get; set; } = new VariantPackaging();
 
         [Display(GroupName = VariantSections.Storage)]
-        public VariantShipping Shipping { get; set; }
+        public VariantShipping Shipping { get; set; } = new VariantShipping();
 
         // Publishing
 
