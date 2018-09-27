@@ -84,6 +84,7 @@ function createBackend(config) {
 
 function createCollection(meta, dataApi) {
   return {
+    meta,
     listItems: null,
 
     get keyName() {

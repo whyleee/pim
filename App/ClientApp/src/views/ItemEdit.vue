@@ -7,18 +7,7 @@
             <b-col>
               <h1>{{ title }}</h1>
             </b-col>
-
-            <b-col
-              v-if="!hasAccessToApi"
-              class="text-right"
-            >
-              <Authorize :backend="backend"/>
-            </b-col>
-
-            <b-col
-              v-else
-              class="text-right"
-            >
+            <b-col class="text-right">
               <b-button
                 v-if="hasErrors"
                 variant="link"
@@ -61,13 +50,7 @@
           </b-alert>
         </div>
 
-        <b-card-body v-if="!hasAccessToApi">
-          <div class="text-center lead">
-            Backend is secured, please authorize.
-          </div>
-        </b-card-body>
-
-        <b-card-body v-else-if="loading">
+        <b-card-body v-if="loading">
           <div
             class="text-center lead"
             v-html="loadingHtml"
@@ -121,12 +104,10 @@
 
 <script>
 import store from '@/store'
-import Authorize from '@/components/Authorize.vue'
 import Field from '@/components/fields/Field.vue'
 
 export default {
   components: {
-    Authorize,
     Field
   },
   $_veeValidate: {
@@ -135,6 +116,10 @@ export default {
   props: {
     backend: {
       type: Object,
+      required: true
+    },
+    collectionKey: {
+      type: String,
       required: true
     }
   },
@@ -152,17 +137,17 @@ export default {
     }
   },
   computed: {
-    hasAccessToApi() {
-      return !this.backend.authHeader || this.store.apiKey
-    },
     itemId() {
       const { id } = this.$route.params
       return id != 'new' ? id : null
     },
+    collection() {
+      return this.store.collection
+    },
+    itemType() {
+      return this.collection.meta.itemType
+    },
     title() {
-      if (!this.hasAccessToApi) {
-        return this.backend.title
-      }
       if (this.loading) {
         return ' '
       }
@@ -175,11 +160,11 @@ export default {
       return this.itemId ? 'Save' : 'Create'
     },
     headerFields() {
-      return this.store.meta.fields
+      return this.itemType.fields
         .filter(f => f.attributes.groupName == 'Header' && !f.attributes.readonly)
     },
     tabs() {
-      return this.store.meta.fields.reduce((tabs, field) => {
+      return this.itemType.fields.reduce((tabs, field) => {
         const groupName = field.attributes.groupName || 'Content'
 
         if (groupName != 'Header') {
@@ -211,17 +196,8 @@ export default {
       return this.hasErrors || !this.hasPendingChanges
     }
   },
-  watch: {
-    hasAccessToApi(yes) {
-      if (yes) {
-        this.load()
-      }
-    }
-  },
-  async created() {
-    if (this.hasAccessToApi) {
-      this.load()
-    }
+  created() {
+    this.load()
   },
   methods: {
     async load() {
@@ -229,23 +205,19 @@ export default {
         this.loadingHtml = 'Loading...'
       }, 50)
 
-      const tasks = [this.store.fetchMeta()]
+      await this.store.fetchMeta()
+      this.store.setCollection(this.collectionKey)
 
       if (this.itemId) {
-        tasks.push(this.fetchItem())
+        this.item = await this.collection.getItem(this.itemId)
       }
 
-      await Promise.all(tasks)
-
-      this.origItem = this.item || this.store.meta.defaultItem
+      this.origItem = this.item || this.itemType.defaultItem
       this.form = JSON.parse(JSON.stringify(this.origItem))
 
       this.loading = false
 
       window.onbeforeunload = () => this.hasPendingChanges || null
-    },
-    async fetchItem() {
-      this.item = await this.store.getItem(this.itemId)
     },
     async onFormSubmit() {
       const ok = await this.$validator.validate()
@@ -255,9 +227,9 @@ export default {
 
       try {
         if (this.itemId) {
-          await this.store.updateItem(this.itemId, this.form)
+          await this.collection.updateItem(this.itemId, this.form)
         } else {
-          await this.store.createItem(this.form)
+          await this.collection.createItem(this.form)
         }
 
         this.origItem = this.form
