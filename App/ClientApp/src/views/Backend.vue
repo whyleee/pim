@@ -2,8 +2,12 @@
   <b-row>
     <b-col
       md="2"
-      class="d-none d-md-block"
+      class="mb-3"
     >
+      <h3>{{ backend.title }}</h3>
+      <pre>[Base URL: {{ backend.data.baseUrl }}]</pre>
+      <hr>
+
       <b-nav
         v-if="store.meta"
         vertical
@@ -16,40 +20,41 @@
           {{ collection.name }}
         </b-nav-item>
       </b-nav>
-    </b-col>
-    <b-col>
-      <b-row align-v="center">
-        <b-col>
-          {{ backend.title }} [<i>{{ backend.data.baseUrl }}</i>]
-        </b-col>
-        <b-col class="text-right">
-          <Authorize v-if="requiresApiKey"/>
-        </b-col>
-      </b-row>
+      <hr>
 
-      <b-row class="mt-3">
-        <b-col>
-          <router-view v-if="hasAccessToApi"/>
-          <b-alert
-            v-else
-            show
-            variant="dark"
-          >
-            Backend is secured, please authorize.
-          </b-alert>
-        </b-col>
-      </b-row>
+      <Authorize v-if="requiresApiKey"/>
     </b-col>
+
+    <b-col>
+      <b-alert
+        v-if="!hasAccessToApi"
+        show
+        variant="dark"
+      >
+        Backend is secured, please authorize.
+      </b-alert>
+
+      <Welcome v-else-if="$route.name == backend.key">
+        <h1>Welcome to {{ backend.title }}!</h1>
+        <p class="lead"><i>Select collection in the sub-menu</i></p>
+      </Welcome>
+
+      <router-view v-else />
+    </b-col>
+
+    <b-col xl="2"/>
   </b-row>
 </template>
 
 <script>
 import store from '@/store'
 import Authorize from '@/components/Authorize.vue'
+import Welcome from '@/components/Welcome.vue'
 
 export default {
   components: {
-    Authorize
+    Authorize,
+    Welcome
   },
   props: {
     backend: {
@@ -76,3 +81,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.nav .active {
+  font-weight: bold;
+}
+</style>

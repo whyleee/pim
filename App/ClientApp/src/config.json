@@ -1,8 +1,8 @@
 {
   "backends": [
     {
-      "key": "products",
-      "title": "Products",
+      "key": "catalog",
+      "title": "Catalog",
       "meta": {
         "url": "/api/meta"
       },

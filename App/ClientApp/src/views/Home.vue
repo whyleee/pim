@@ -1,15 +1,16 @@
 <template>
-  <b-row>
-    <b-col class="welcome">
-      <h1>Welcome to pim!</h1>
-      <p class="lead"><i>Select backend in the top menu</i></p>
-    </b-col>
-  </b-row>
+  <Welcome>
+    <h1>Welcome to pim!</h1>
+    <p class="lead"><i>Select backend in the top menu</i></p>
+  </Welcome>
 </template>
 
-<style scoped>
-.welcome {
-  padding: 3rem 1.5rem;
-  text-align: center;
+<script>
+import Welcome from '@/components/Welcome.vue'
+
+export default {
+  components: {
+    Welcome
+  }
 }
-</style>
+</script>
