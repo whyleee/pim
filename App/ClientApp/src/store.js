@@ -68,7 +68,7 @@ function createBackend(config) {
         this.meta = await catchError(() => api.meta.get())
       }
     },
-    setCollection(key) {
+    getCollection(key) {
       if (!collections[key]) {
         const collectionMeta = this.meta.collections.find(c => c.key == key)
         const dataApi = api.createDataApi(collectionMeta)
@@ -77,7 +77,10 @@ function createBackend(config) {
         collections[key] = createCollection(collectionMeta, dataApi)
       }
 
-      this.collection = collections[key]
+      return collections[key]
+    },
+    setCollection(key) {
+      this.collection = this.getCollection(key)
     }
   }
 }
@@ -88,27 +91,24 @@ function createCollection(meta, dataApi) {
     listItems: null,
 
     get keyName() {
-      const keyField = meta.itemType.fields.find(field =>
-        Object.entries(field.attributes)
-          .some(([key, value]) => key == 'key' && value))
-
+      const keyField = meta.itemType.fields.find(field => field.attributes.key)
       return keyField ? keyField.name : 'id'
     },
 
-    async fetchListItems() {
-      this.listItems = await catchError(() => dataApi.get())
+    async fetchListItems(params = {}) {
+      this.listItems = await catchError(() => dataApi.get(params))
     },
-    getItem(id) {
-      return catchError(() => dataApi.getById(id))
+    getItem(id, params = {}) {
+      return catchError(() => dataApi.getById(id, params))
     },
-    createItem(data) {
-      return catchError(() => dataApi.post(data))
+    createItem(data, params = {}) {
+      return catchError(() => dataApi.post(data, params))
     },
-    updateItem(id, data) {
-      return catchError(() => dataApi.put(id, data))
+    updateItem(id, data, params = {}) {
+      return catchError(() => dataApi.put(id, data, params))
     },
-    async deleteItem(id) {
-      await catchError(() => dataApi.delete(id))
+    async deleteItem(id, params = {}) {
+      await catchError(() => dataApi.delete(id, params))
 
       const index = this.listItems.findIndex(i => i[this.keyName] == id)
       this.listItems.splice(index, 1)

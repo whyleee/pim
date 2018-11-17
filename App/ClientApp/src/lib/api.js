@@ -26,28 +26,34 @@ export default {
       },
       createDataApi(collection) {
         return {
-          url() {
-            return `${backend.data.baseUrl}${collection.path}`
+          url(params = {}) {
+            let url = `${backend.data.baseUrl}${collection.path}`
+
+            Object.entries(params).forEach(([key, value]) => {
+              url = url.replace(`{${key}}`, value)
+            })
+
+            return url
           },
-          async get() {
-            const response = await http.get(this.url())
+          async get(params = {}) {
+            const response = await http.get(this.url(params))
 
             return collection.itemsProperty
               ? response.data[collection.itemsProperty]
               : response.data
           },
-          async getById(id) {
-            const response = await http.get(`${this.url()}/${id}`)
+          async getById(id, params = {}) {
+            const response = await http.get(`${this.url(params)}/${id}`)
             return response.data
           },
-          post(item) {
-            return http.post(this.url(), item)
+          post(item, params = {}) {
+            return http.post(this.url(params), item)
           },
-          put(id, item) {
-            return http.put(`${this.url()}/${id}`, item)
+          put(id, item, params = {}) {
+            return http.put(`${this.url(params)}/${id}`, item)
           },
-          delete(id) {
-            return http.delete(`${this.url()}/${id}`)
+          delete(id, params = {}) {
+            return http.delete(`${this.url(params)}/${id}`)
           }
         }
       }

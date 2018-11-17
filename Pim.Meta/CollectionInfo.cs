@@ -21,5 +21,8 @@ namespace Pim.Meta
 
         [DataMember]
         public ItemTypeInfo ItemType { get; set; }
+
+        [DataMember]
+        public IEnumerable<CollectionFilterInfo> Filters { get; set; } = new List<CollectionFilterInfo>();
     }
 }

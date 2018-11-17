@@ -45,7 +45,11 @@ namespace Pim.Meta
                 Name = GetCollectionName(collectionProp),
                 Path = GetCollectionPath(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
-                ItemType = GetTypeInfo(itemType)
+                ItemType = GetTypeInfo(itemType),
+                Filters = collectionProp
+                    .GetCustomAttributes<CollectionFilterAttribute>()
+                    .Select(GetCollectionFilterInfo)
+                    .ToList()
             };
         }
 
@@ -66,12 +70,25 @@ namespace Pim.Meta
             return prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty;
         }
 
+        private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
+        {
+            return new CollectionFilterInfo
+            {
+                Key = attr.Key,
+                Name = attr.Name,
+                RefCollectionKey = attr.RefCollectionKey
+            };
+        }
+
         private ItemTypeInfo GetTypeInfo(Type type)
         {
             return new ItemTypeInfo
             {
                 Name = type.Name,
-                Fields = type.GetProperties().Select(GetTypeFieldInfo).ToList(),
+                Fields = type.GetProperties()
+                    .Where(ShouldScaffold)
+                    .Select(GetTypeFieldInfo)
+                    .ToList(),
                 DefaultItem = Activator.CreateInstance(type)
             };
         }
@@ -230,6 +247,11 @@ namespace Pim.Meta
         private bool IsCollection(Type type)
         {
             return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        private bool ShouldScaffold(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<ScaffoldColumnAttribute>()?.Scaffold ?? true;
         }
     }
 }

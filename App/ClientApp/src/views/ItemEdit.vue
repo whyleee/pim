@@ -59,6 +59,24 @@
 
         <template v-else>
           <b-card-body class="header-fields">
+            <b-row>
+              <b-col
+                v-for="filter in filters"
+                :key="filter.key"
+                md="6"
+              >
+                <b-form-group
+                  :label="filter.name"
+                  horizontal
+                >
+                  <b-form-input
+                    :value="filterParams[filter.key]"
+                    plaintext
+                  />
+                </b-form-group>
+              </b-col>
+            </b-row>
+
             <Field
               v-for="field in headerFields"
               :key="field.name"
@@ -147,6 +165,9 @@ export default {
     itemType() {
       return this.collection.meta.itemType
     },
+    filters() {
+      return this.collection.meta.filters
+    },
     title() {
       if (this.loading) {
         return '&nbsp;'
@@ -194,6 +215,9 @@ export default {
     },
     saveButtonDisabled() {
       return this.hasErrors || !this.hasPendingChanges
+    },
+    filterParams() {
+      return this.$route.query
     }
   },
   created() {
@@ -209,7 +233,7 @@ export default {
       this.store.setCollection(this.collectionKey)
 
       if (this.itemId) {
-        this.item = await this.collection.getItem(this.itemId)
+        this.item = await this.collection.getItem(this.itemId, this.filterParams)
       }
 
       this.origItem = this.item || this.itemType.defaultItem
@@ -227,9 +251,9 @@ export default {
 
       try {
         if (this.itemId) {
-          await this.collection.updateItem(this.itemId, this.form)
+          await this.collection.updateItem(this.itemId, this.form, this.filterParams)
         } else {
-          await this.collection.createItem(this.form)
+          await this.collection.createItem(this.form, this.filterParams)
         }
 
         this.origItem = this.form
