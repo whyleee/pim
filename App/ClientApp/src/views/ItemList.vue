@@ -8,6 +8,7 @@
           </b-col>
           <b-col class="text-right">
             <b-button
+              v-if="!readonly"
               :to="{
                 name: `${backend.key}-edit`,
                 params: { collection: collectionKey, id: 'new' },
@@ -133,6 +134,12 @@ export default {
         return '&nbsp;'
       }
       return this.collection.meta.name
+    },
+    readonly() {
+      if (!this.collection) {
+        return true
+      }
+      return this.collection.meta.readonly
     },
     filters() {
       if (!this.collection) {

@@ -44,6 +44,7 @@ namespace Pim.Meta
                 Key = collectionProp.Name.ToLowerInvariant(),
                 Name = GetCollectionName(collectionProp),
                 Path = GetCollectionPath(collectionProp),
+                Readonly = GetCollectionReadOnly(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
                 ItemType = GetTypeInfo(itemType),
                 Filters = collectionProp
@@ -63,6 +64,11 @@ namespace Pim.Meta
         {
             return prop.GetCustomAttribute<CollectionAttribute>()?.Path
                 ?? $"/{prop.Name.ToLowerInvariant()}";
+        }
+
+        private bool GetCollectionReadOnly(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Readonly ?? false;
         }
 
         private string GetCollectionItemsProperty(PropertyInfo prop)
