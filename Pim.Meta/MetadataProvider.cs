@@ -72,12 +72,30 @@ namespace Pim.Meta
 
         private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
         {
-            return new CollectionFilterInfo
+            if (attr is CollectionQueryFilterAttribute)
             {
-                Key = attr.Key,
-                Name = attr.Name,
-                RefCollectionKey = attr.RefCollectionKey
-            };
+                return new CollectionQueryFilterInfo
+                {
+                    Key = attr.Key,
+                    Name = attr.Name,
+                    Type = "query",
+                    Required = attr.Required
+                };
+            }
+
+            if (attr is CollectionRefFilterAttribute refFilterAttr)
+            {
+                return new CollectionRefFilterInfo
+                {
+                    Key = attr.Key,
+                    Name = attr.Name,
+                    Type = "ref",
+                    Required = attr.Required,
+                    RefCollectionKey = refFilterAttr.RefCollectionKey
+                };
+            }
+
+            throw new ArgumentException("Unknown filter attribute");
         }
 
         private ItemTypeInfo GetTypeInfo(Type type)

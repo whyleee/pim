@@ -6,7 +6,6 @@
     <b-form-select
       :value="selectedValue"
       :options="options"
-      :plaintext="plaintext"
       @input="onInput"
     />
   </b-form-group>
@@ -26,10 +25,6 @@ export default {
     value: {
       type: String,
       default: ''
-    },
-    plaintext: {
-      type: Boolean,
-      default: false
     }
   },
   data() {

@@ -28,10 +28,23 @@ export default {
         return {
           url(params = {}) {
             let url = `${backend.data.baseUrl}${collection.path}`
+            const query = {}
 
             Object.entries(params).forEach(([key, value]) => {
-              url = url.replace(`{${key}}`, value)
+              if (url.indexOf(`{${key}}`) >= 0) {
+                url = url.replace(`{${key}}`, value)
+              } else if (value) {
+                query[key] = value
+              }
             })
+
+            if (Object.keys(query).length) {
+              const qs = Object.entries(query)
+                .map(entry => `${entry[0]}=${entry[1]}`)
+                .join('&')
+
+              url += (url.indexOf('?') >= 0 ? '&' : '?') + qs
+            }
 
             return url
           },

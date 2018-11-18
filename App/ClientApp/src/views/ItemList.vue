@@ -11,7 +11,7 @@
               :to="{
                 name: `${backend.key}-edit`,
                 params: { collection: collectionKey, id: 'new' },
-                query: filterParams
+                query: itemEditQuery
               }"
               class="ml-1"
             >
@@ -28,7 +28,13 @@
             :key="filter.key"
             md="6"
           >
-            <CollectionFilter
+            <CollectionQueryFilter
+              v-if="filter.type == 'query'"
+              :filter="filter"
+              v-model="filterParams[filter.key]"
+            />
+            <CollectionRefFilter
+              v-else-if="filter.type == 'ref'"
               :store="store"
               :filter="filter"
               v-model="filterParams[filter.key]"
@@ -56,7 +62,7 @@
             :to="{
               name: `${backend.key}-edit`,
               params: { collection: collectionKey, id: item[collection.keyName] },
-              query: filterParams
+              query: itemEditQuery
             }"
           >
             {{ item.name }}
@@ -90,11 +96,13 @@
 
 <script>
 import store from '@/store'
-import CollectionFilter from '@/components/CollectionFilter.vue'
+import CollectionQueryFilter from '@/components/filters/CollectionQueryFilter.vue'
+import CollectionRefFilter from '@/components/filters/CollectionRefFilter.vue'
 
 export default {
   components: {
-    CollectionFilter
+    CollectionQueryFilter,
+    CollectionRefFilter
   },
   props: {
     backend: {
@@ -133,7 +141,18 @@ export default {
       return this.collection.meta.filters
     },
     allFiltersSet() {
-      return Object.values(this.filterParams).every(param => param)
+      return this.filters
+        .filter(filter => filter.required)
+        .map(filter => this.filterParams[filter.key])
+        .every(param => param)
+    },
+    itemEditQuery() {
+      return this.filters
+        .filter(filter => filter.required)
+        .reduce((query, filter) => {
+          query[filter.key] = this.filterParams[filter.key]
+          return query
+        }, {})
     }
   },
   watch: {

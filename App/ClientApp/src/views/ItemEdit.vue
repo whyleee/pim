@@ -61,7 +61,7 @@
           <b-card-body class="header-fields">
             <b-row>
               <b-col
-                v-for="filter in filters"
+                v-for="filter in currentFilters"
                 :key="filter.key"
                 md="6"
               >
@@ -165,8 +165,9 @@ export default {
     itemType() {
       return this.collection.meta.itemType
     },
-    filters() {
+    currentFilters() {
       return this.collection.meta.filters
+        .filter(filter => filter.required)
     },
     title() {
       if (this.loading) {
