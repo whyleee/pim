@@ -5,7 +5,12 @@
       class="mb-3"
     >
       <h3>{{ backend.title }}</h3>
-      <pre>[Base URL: {{ backend.data.baseUrl }}]</pre>
+      <pre
+        :title="backend.data.baseUrl"
+        class="base-url small"
+      >
+        [Base URL: {{ backend.data.baseUrl }}]
+      </pre>
       <hr>
 
       <b-nav
@@ -85,5 +90,11 @@ export default {
 <style scoped>
 .nav .active {
   font-weight: bold;
+}
+
+.base-url {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 </style>
