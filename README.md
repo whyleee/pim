@@ -6,6 +6,7 @@ Simple edit UI for your backend. http://pim-pn.azurewebsites.net
 ## Features
 - Basic create/update/delete flow
 - Multiple external backends
+- Multiple collections with filters per backend
 - Authorization with HTTP headers
 - Supported fields:
   - Checkbox
@@ -39,21 +40,35 @@ Simple edit UI for your backend. http://pim-pn.azurewebsites.net
    ```powershell
    Install-Package Pim.Meta
    ```
-2. Add controller to provide meta API:
+2. Create backend definition model:
+   ```csharp
+   public class Backend
+   {
+       [Collection]
+       [CollectionQueryFilter("category")]
+       [CollectionQueryFilter("market")]
+       public IEnumerable<Product> Products { get; set; }
+   
+       [Collection(Path = "/{productId}/" + nameof(Variants))]
+       [CollectionRefFilter("productId", nameof(Products), Required = true)]
+       public IEnumerable<Variant> Variants { get; set; }
+   }
+   ```
+3. Add controller to provide meta API:
    ```csharp
    [Route("api/[controller]")]
    public class MetaController : Controller
    {
        private readonly MetadataProvider _metadataProvider = new MetadataProvider();
  
-       [HttpGet("{itemType}")]
-       public ItemTypeInfo GetTypeInfo(string itemType)
+       [HttpGet]
+       public BackendInfo GetMeta()
        {
-           return _metadataProvider.GetTypeInfo(typeof(Product));
+           return _metadataProvider.GetBackendInfo(typeof(Backend));
        }
    }
    ```
-3. Add backend to `App/ClientApp/src/config.json` with data URL pointing to REST CRUD API:
+4. Add backend to `App/ClientApp/src/config.json` with data URL pointing to REST CRUD API:
    ```json
    {
      "backends": [
@@ -64,7 +79,7 @@ Simple edit UI for your backend. http://pim-pn.azurewebsites.net
            "url": "https://external-backend.com/api/meta"
          },
          "data": {
-           "url": "https://external-backend.com/api/products"
+           "baseUrl": "https://external-backend.com/api"
          }
        }
      ]
@@ -86,16 +101,36 @@ Name of the HTTP header to use for authorization to backend APIs. User will be p
 #### backend.meta.url (required)
 URL to meta API, used to construct edit UI for the backend.
 
-#### backend.data.url (required)
-URL to REST CRUD data API (Create-Read-Update-Delete), used to work with data. The API must provide 5 HTTP endpoints:
+#### backend.data.baseUrl (required)
+Base URL to data API, used to work with backend data. Every collection in the backend must provide 5 HTTP API endpoints:
 - `GET %data.url%`: return all backend items as a list (IDs and names are required, other data is ignored)
 - `GET %data.url%/{id}`: return full item data by ID
 - `POST %data.url%`: create new item in the backend with posted data
 - `PUT %data.url%/{id}`: replace item data by ID
 - `DELETE %data.url%/{id}`: delete item by ID
 
-#### backend.data.collectionItemsProperty
-Name of the response data property containing result collection items from `GET %data.url%` API. By default entire response is treated as a collection.
+> `POST`, `PUT` and `DELETE` APIs are not required if collection is marked as readonly.
+
+## C# Meta Attributes
+The list of available C# attributes and options for metadata:
+
+#### CollectionAttribute.Path
+Path to collection REST CRUD API (Create-Read-Update-Delete) used to work with data, appended to `%data.baseUrl%` from config. Default path is C# property name. 
+
+#### CollectionAttribute.Readonly
+Marks collection as readonly. Disables all editing functionality, only list view is available.
+
+#### CollectionAttribute.Constant
+Marks collection as constant. Disables existing item editing, but allows viewing and creating items.
+
+#### CollectionAttribute.ItemsProperty
+Name of the response data property containing result collection items from `GET %data.baseUrl%%collection.path%` API. By default entire response is treated as a collection.
+
+#### CollectionQueryFilterAttribute
+Adds a string filter to collection items. Displayed as a text input in the collection list view.
+
+#### CollectionRefFilterAttribute
+Adds a referenced collection filter to collection items. Displayed as a select list in the collection list view.
 
 ## Deployment
 The app is cloud ready and can be deployed in minutes to any cloud provider.
