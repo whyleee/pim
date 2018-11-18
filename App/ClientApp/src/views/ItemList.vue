@@ -59,7 +59,11 @@
           v-for="item in collection.listItems"
           :key="item[collection.keyName]"
         >
+          <template v-if="readonly || constant">
+            {{ item.name }}
+          </template>
           <b-link
+            v-else
             :to="{
               name: `${backend.key}-edit`,
               params: { collection: collectionKey, id: item[collection.keyName] },
@@ -69,6 +73,7 @@
             {{ item.name }}
           </b-link>
           <b-link
+            v-if="!readonly && !constant"
             class="float-right"
             @click.stop="confirmDelete(item)"
           >
@@ -140,6 +145,12 @@ export default {
         return true
       }
       return this.collection.meta.readonly
+    },
+    constant() {
+      if (!this.collection) {
+        return true
+      }
+      return this.collection.meta.constant
     },
     filters() {
       if (!this.collection) {

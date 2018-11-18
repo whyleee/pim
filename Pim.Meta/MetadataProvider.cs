@@ -45,6 +45,7 @@ namespace Pim.Meta
                 Name = GetCollectionName(collectionProp),
                 Path = GetCollectionPath(collectionProp),
                 Readonly = GetCollectionReadOnly(collectionProp),
+                Constant = GetCollectionConstant(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
                 ItemType = GetTypeInfo(itemType),
                 Filters = collectionProp
@@ -69,6 +70,11 @@ namespace Pim.Meta
         private bool GetCollectionReadOnly(PropertyInfo prop)
         {
             return prop.GetCustomAttribute<CollectionAttribute>()?.Readonly ?? false;
+        }
+
+        private bool GetCollectionConstant(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Constant ?? false;
         }
 
         private string GetCollectionItemsProperty(PropertyInfo prop)
@@ -128,6 +134,12 @@ namespace Pim.Meta
                 Kind = GetFieldKind(prop),
                 Attributes = GetAttributes(prop)
             };
+
+            if (field.Kind == DataType.Text.ToString())
+            {
+                field.Type = GetTypeName(typeof(string));
+                field.Kind = "array";
+            }
 
             var itemType = IsCollection(prop.PropertyType)
                 ? prop.PropertyType.GetGenericArguments().First()

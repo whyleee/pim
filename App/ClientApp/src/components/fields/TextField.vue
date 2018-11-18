@@ -43,6 +43,9 @@ export default {
         if (this.type == 'number') {
           parsed = Number(value)
         }
+        if (this.field.kind == 'array' && typeof value == 'string') {
+          parsed = value.split(',')
+        }
 
         this.item[this.field.name] = parsed || value
       }

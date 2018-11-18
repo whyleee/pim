@@ -20,6 +20,9 @@ namespace Pim.Meta
         public bool Readonly { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public bool Constant { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public string ItemsProperty { get; set; }
 
         [DataMember]

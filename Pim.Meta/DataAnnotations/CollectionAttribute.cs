@@ -10,6 +10,8 @@ namespace Pim.Meta.DataAnnotations
 
         public bool Readonly { get; set; }
 
+        public bool Constant { get; set; }
+
         public string ItemsProperty { get; set; }
     }
 }
