@@ -7,13 +7,13 @@
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
     <PackageId>pim</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Pavlo Niezhentsev</Authors>
     <Product>pim</Product>
     <Description>Simple edit UI for your backend.</Description>
     <Copyright>Copyright (C) 2018-present Pavlo Niezhentsev</Copyright>
     <PackageLicenseUrl>https://github.com/whyleee/pim/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>http://pim-pn.azurewebsites.net</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/whyleee/pim</PackageProjectUrl>
     <RepositoryUrl>https://github.com/whyleee/pim</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <UserSecretsId>9803d7a1-53fe-432f-b828-04cd6054dea4</UserSecretsId>

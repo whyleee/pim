@@ -2,12 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.2.0</Version>
+    <Version>0.3.0</Version>
     <Authors>Pavlo Niezhentsev</Authors>
     <Product>pim</Product>
     <Description>Metadata provider for pim app.</Description>
     <Copyright>Copyright (c) 2018-present Pavlo Niezhentsev</Copyright>
-    <PackageProjectUrl>http://pim-pn.azurewebsites.net</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/whyleee/pim</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/whyleee/pim/blob/master/Pim.Meta/LICENSE</PackageLicenseUrl>
     <RepositoryUrl>https://github.com/whyleee/pim</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
