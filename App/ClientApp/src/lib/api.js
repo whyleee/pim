@@ -20,34 +20,54 @@ export default {
           return backend.meta.url
         },
         async get() {
-          const response = await http.get(`${this.url()}/item`)
+          const response = await http.get(`${this.url()}`)
           return response.data
         }
       },
-      data: {
-        url() {
-          return backend.data.url
-        },
-        async get() {
-          const response = await http.get(this.url())
-          const { collectionItemsProperty } = backend.data
+      createDataApi(collection) {
+        return {
+          url(params = {}) {
+            let url = `${backend.data.baseUrl}${collection.path}`
+            const query = {}
 
-          return collectionItemsProperty
-            ? response.data[collectionItemsProperty]
-            : response.data
-        },
-        async getById(id) {
-          const response = await http.get(`${this.url()}/${id}`)
-          return response.data
-        },
-        post(item) {
-          return http.post(this.url(), item)
-        },
-        put(id, item) {
-          return http.put(`${this.url()}/${id}`, item)
-        },
-        delete(id) {
-          return http.delete(`${this.url()}/${id}`)
+            Object.entries(params).forEach(([key, value]) => {
+              if (url.indexOf(`{${key}}`) >= 0) {
+                url = url.replace(`{${key}}`, value)
+              } else if (value) {
+                query[key] = value
+              }
+            })
+
+            if (Object.keys(query).length) {
+              const qs = Object.entries(query)
+                .map(entry => `${entry[0]}=${entry[1]}`)
+                .join('&')
+
+              url += (url.indexOf('?') >= 0 ? '&' : '?') + qs
+            }
+
+            return url
+          },
+          async get(params = {}) {
+            const response = await http.get(this.url(params))
+
+            return collection.itemsProperty
+              ? response.data[collection.itemsProperty]
+              : response.data
+          },
+          async getById(id, params = {}) {
+            const response = await http.get(`${this.url(params)}/${id}`)
+            return response.data
+          },
+          post(item, params = {}) {
+            return http.post(this.url(params), item)
+          },
+          put(id, item, params = {}) {
+            return http.put(`${this.url(params)}/${id}`, item)
+          },
+          delete(id, params = {}) {
+            return http.delete(`${this.url(params)}/${id}`)
+          }
         }
       }
     }

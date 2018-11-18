@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using App.Models.SelectOptions;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
 using Pim.Meta.DataAnnotations;
@@ -14,7 +14,7 @@ namespace App.Models
         // Header
 
         [Display(GroupName = ProductSections.Header)]
-        [ReadOnly(true)]
+        [Editable(false)]
         [BsonId(IdGenerator = typeof(StringObjectIdGenerator))]
         public string Id { get; set; }
 
@@ -98,11 +98,11 @@ namespace App.Models
         // Publishing
 
         [Display(GroupName = ProductSections.Publishing)]
-        [ReadOnly(true)]
+        [Editable(false)]
         public DateTime Created { get; set; }
 
         [Display(GroupName = ProductSections.Publishing)]
-        [ReadOnly(true)]
+        [Editable(false)]
         public DateTime Updated { get; set; }
 
         [Display(GroupName = ProductSections.Publishing)]
@@ -114,29 +114,5 @@ namespace App.Models
 
         [Display(GroupName = ProductSections.Publishing)]
         public MarkAsNew MarkAsNew { get; set; } = new MarkAsNew();
-    }
-
-    public class WeightUnitSelectOptions : ISelectOptionProvider
-    {
-        public IEnumerable<SelectOption> GetOptions()
-        {
-            return new[]
-            {
-                new SelectOption("kg", "kg"),
-                new SelectOption("l", "l")
-            };
-        }
-    }
-
-    public class PublishStatusSelectOptions : ISelectOptionProvider
-    {
-        public IEnumerable<SelectOption> GetOptions()
-        {
-            return new[]
-            {
-                new SelectOption("Draft", "draft"),
-                new SelectOption("Published", "published")
-            };
-        }
     }
 }

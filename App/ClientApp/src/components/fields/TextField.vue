@@ -35,7 +35,7 @@ export default {
   computed: {
     value: {
       get() {
-        return this.item[this.field.name]
+        return this.item[this.readFrom || this.field.name]
       },
       set(value) {
         let parsed = value
@@ -43,30 +43,40 @@ export default {
         if (this.type == 'number') {
           parsed = Number(value)
         }
+        if (this.field.kind == 'array' && typeof value == 'string') {
+          parsed = value.split(',')
+        }
 
         this.item[this.field.name] = parsed || value
       }
     },
     origValue() {
-      return this.origItem[this.field.name]
+      return this.origItem[this.readFrom || this.field.name]
+    },
+    readFrom() {
+      return this.field.attributes.readFrom
     },
     type() {
-      if (this.field.type == 'integer' || this.field.type == 'number') {
+      if (!this.readFrom && (this.field.type == 'integer' || this.field.type == 'number')) {
         return 'number'
       }
       return 'text'
     },
     step() {
-      if (this.field.type == 'integer') {
+      if (!this.readFrom && this.field.type == 'integer') {
         return 1
       }
       return undefined
     },
     readonly() {
       return this.field.attributes.readonly ||
-        (this.field.attributes.constant && this.origValue != null)
+        (this.field.attributes.constant && !!this.origValue)
     },
     validators() {
+      if (this.readFrom) {
+        return {}
+      }
+
       const { range, required, regex } = this.field.attributes
       return {
         required: !!required,

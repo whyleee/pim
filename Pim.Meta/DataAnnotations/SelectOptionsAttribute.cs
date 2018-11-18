@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Pim.Meta.DataAnnotations
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class SelectOptionsAttribute : Attribute
     {
         public SelectOptionsAttribute(Type optionProvider)

@@ -11,12 +11,116 @@ namespace Pim.Meta
 {
     public class MetadataProvider
     {
-        public ItemTypeInfo GetTypeInfo(Type type)
+        public BackendInfo GetBackendInfo(Type backendType)
+        {
+            return new BackendInfo
+            {
+                Collections = backendType.GetProperties()
+                    .Select(prop => new
+                    {
+                        Property = prop,
+                        ItemType = TryGetCollectionItemType(prop.PropertyType)
+                    })
+                    .Where(prop => prop.ItemType != null)
+                    .Select(prop => GetCollectionInfo(prop.Property, prop.ItemType))
+                    .ToList()
+            };
+        }
+
+        private Type TryGetCollectionItemType(Type type)
+        {
+            return new[] { type }.Union(type.GetInterfaces())
+                .Where(t => t != typeof(string) &&
+                            t.IsGenericType &&
+                            t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                .Select(t => t.GetGenericArguments().First())
+                .FirstOrDefault();
+        }
+
+        private CollectionInfo GetCollectionInfo(PropertyInfo collectionProp, Type itemType)
+        {
+            return new CollectionInfo
+            {
+                Key = collectionProp.Name.ToLowerInvariant(),
+                Name = GetCollectionName(collectionProp),
+                Path = GetCollectionPath(collectionProp),
+                Readonly = GetCollectionReadOnly(collectionProp),
+                Constant = GetCollectionConstant(collectionProp),
+                ItemsProperty = GetCollectionItemsProperty(collectionProp),
+                ItemType = GetTypeInfo(itemType),
+                Filters = collectionProp
+                    .GetCustomAttributes<CollectionFilterAttribute>()
+                    .Select(GetCollectionFilterInfo)
+                    .ToList()
+            };
+        }
+
+        private string GetCollectionName(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<DisplayAttribute>()?.Name
+                ?? Helpers.ToSentenceCase(prop.Name);
+        }
+
+        private string GetCollectionPath(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Path
+                ?? $"/{prop.Name.ToLowerInvariant()}";
+        }
+
+        private bool GetCollectionReadOnly(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Readonly ?? false;
+        }
+
+        private bool GetCollectionConstant(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.Constant ?? false;
+        }
+
+        private string GetCollectionItemsProperty(PropertyInfo prop)
+        {
+            return Helpers.ToCamelCase(prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty);
+        }
+
+        private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
+        {
+            if (attr is CollectionQueryFilterAttribute)
+            {
+                return new CollectionQueryFilterInfo
+                {
+                    Key = attr.Key,
+                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                    Description = attr.Description,
+                    Type = "query",
+                    Required = attr.Required
+                };
+            }
+
+            if (attr is CollectionRefFilterAttribute refFilterAttr)
+            {
+                return new CollectionRefFilterInfo
+                {
+                    Key = attr.Key,
+                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                    Description = attr.Description,
+                    Type = "ref",
+                    Required = attr.Required,
+                    RefCollectionKey = Helpers.ToCamelCase(refFilterAttr.RefCollectionKey)
+                };
+            }
+
+            throw new ArgumentException("Unknown filter attribute");
+        }
+
+        private ItemTypeInfo GetTypeInfo(Type type)
         {
             return new ItemTypeInfo
             {
                 Name = type.Name,
-                Fields = type.GetProperties().Select(GetTypeFieldInfo).ToList(),
+                Fields = type.GetProperties()
+                    .Where(ShouldScaffold)
+                    .Select(GetTypeFieldInfo)
+                    .ToList(),
                 DefaultItem = Activator.CreateInstance(type)
             };
         }
@@ -30,6 +134,12 @@ namespace Pim.Meta
                 Kind = GetFieldKind(prop),
                 Attributes = GetAttributes(prop)
             };
+
+            if (field.Kind == DataType.Text.ToString())
+            {
+                field.Type = GetTypeName(typeof(string));
+                field.Kind = "array";
+            }
 
             var itemType = IsCollection(prop.PropertyType)
                 ? prop.PropertyType.GetGenericArguments().First()
@@ -93,6 +203,10 @@ namespace Pim.Meta
                     {
                         dict["groupName"] = display.GroupName;
                     }
+                }
+                if (attr is ReadFromAttribute readFrom)
+                {
+                    dict["readFrom"] = Helpers.ToCamelCase(readFrom.PropertyName);
                 }
                 if (attr is SelectOptionsAttribute selectOptions)
                 {
@@ -175,6 +289,11 @@ namespace Pim.Meta
         private bool IsCollection(Type type)
         {
             return type != typeof(string) && typeof(IEnumerable).IsAssignableFrom(type);
+        }
+
+        private bool ShouldScaffold(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<ScaffoldColumnAttribute>()?.Scaffold ?? true;
         }
     }
 }

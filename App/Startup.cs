@@ -45,6 +45,7 @@ namespace App
 
             // app
             services.AddSingleton<IProductStore, MongoProductStore>();
+            services.AddSingleton<IVariantStore, MongoVariantStore>();
             services.AddSingleton<MetadataProvider>();
         }
 
@@ -65,7 +66,10 @@ namespace App
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
 
-            app.UseMvc();
+            app.Map("/api", api =>
+            {
+                api.UseMvc();
+            });
 
             app.UseSpa(spa =>
             {

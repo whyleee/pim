@@ -8,7 +8,7 @@ using Pim.Meta;
 
 namespace App.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class MetaController : ControllerBase
     {
@@ -19,23 +19,12 @@ namespace App.Controllers
             _metadataProvider = metadataProvider;
         }
 
-        [HttpGet("{itemType}")]
-        public ActionResult<ItemTypeInfo> GetTypeInfo(ItemType itemType)
+        [HttpGet]
+        public ActionResult<BackendInfo> GetMeta()
         {
-            var type = ResolveType(itemType);
-            var meta = _metadataProvider.GetTypeInfo(type);
+            var meta = _metadataProvider.GetBackendInfo(typeof(Backend));
 
             return Ok(meta);
-        }
-
-        private Type ResolveType(ItemType itemType)
-        {
-            if (itemType == ItemType.Item)
-            {
-                return typeof(Product);
-            }
-
-            throw new NotSupportedException($"Uknown item type {itemType}");
         }
     }
 }

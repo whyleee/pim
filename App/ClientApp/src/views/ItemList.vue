@@ -4,15 +4,16 @@
       <div slot="header">
         <b-row align-v="center">
           <b-col>
-            <h1>{{ backend.title }}</h1>
+            <h1 v-html="title"/>
           </b-col>
           <b-col class="text-right">
-            <Authorize
-              v-if="requiresApiKey"
-            />
             <b-button
-              v-if="hasAccessToApi"
-              :to="{ name: `${backend.key}-edit`, params: { id: 'new' }}"
+              v-if="!readonly"
+              :to="{
+                name: `${backend.key}-edit`,
+                params: { collection: collectionKey, id: 'new' },
+                query: itemEditQuery
+              }"
               class="ml-1"
             >
               New
@@ -21,13 +22,29 @@
         </b-row>
       </div>
 
-      <b-card-body v-if="!hasAccessToApi">
-        <div class="text-center lead">
-          Backend is secured, please authorize.
-        </div>
+      <b-card-body v-if="filters.length">
+        <b-row>
+          <b-col
+            v-for="filter in filters"
+            :key="filter.key"
+            md="6"
+          >
+            <CollectionQueryFilter
+              v-if="filter.type == 'query'"
+              :filter="filter"
+              v-model="filterParams[filter.key]"
+            />
+            <CollectionRefFilter
+              v-else-if="filter.type == 'ref'"
+              :store="store"
+              :filter="filter"
+              v-model="filterParams[filter.key]"
+            />
+          </b-col>
+        </b-row>
       </b-card-body>
 
-      <b-card-body v-else-if="loading">
+      <b-card-body v-if="loading">
         <div
           class="text-center lead"
           v-html="loadingHtml"
@@ -35,17 +52,28 @@
       </b-card-body>
 
       <b-list-group
-        v-else
+        v-else-if="collection.listItems.length"
         flush
       >
         <b-list-group-item
-          v-for="item in store.listItems"
-          :key="item[store.keyName]"
+          v-for="item in collection.listItems"
+          :key="item[collection.keyName]"
         >
-          <b-link :to="{ name: `${backend.key}-edit`, params: { id: item[store.keyName] }}">
+          <template v-if="readonly || constant">
+            {{ item.name }}
+          </template>
+          <b-link
+            v-else
+            :to="{
+              name: `${backend.key}-edit`,
+              params: { collection: collectionKey, id: item[collection.keyName] },
+              query: itemEditQuery
+            }"
+          >
             {{ item.name }}
           </b-link>
           <b-link
+            v-if="!readonly && !constant"
             class="float-right"
             @click.stop="confirmDelete(item)"
           >
@@ -64,21 +92,31 @@
           </p>
         </b-modal>
       </b-list-group>
+
+      <b-card-body v-else>
+        <div class="text-center lead">No items</div>
+      </b-card-body>
     </b-card>
   </div>
 </template>
 
 <script>
 import store from '@/store'
-import Authorize from '@/components/Authorize.vue'
+import CollectionQueryFilter from '@/components/filters/CollectionQueryFilter.vue'
+import CollectionRefFilter from '@/components/filters/CollectionRefFilter.vue'
 
 export default {
   components: {
-    Authorize
+    CollectionQueryFilter,
+    CollectionRefFilter
   },
   props: {
     backend: {
       type: Object,
+      required: true
+    },
+    collectionKey: {
+      type: String,
       required: true
     }
   },
@@ -88,29 +126,65 @@ export default {
       store: store.backend,
       selectedItem: null,
       loading: true,
-      loadingHtml: '&nbsp;'
+      loadingHtml: '&nbsp;',
+      filterParams: {}
     }
   },
   computed: {
-    requiresApiKey() {
-      return this.backend.authHeader
+    collection() {
+      return this.store.collection
     },
-    hasAccessToApi() {
-      return !this.requiresApiKey || !!this.store.apiKey
+    title() {
+      if (!this.collection) {
+        return '&nbsp;'
+      }
+      return this.collection.meta.name
+    },
+    readonly() {
+      if (!this.collection) {
+        return true
+      }
+      return this.collection.meta.readonly
+    },
+    constant() {
+      if (!this.collection) {
+        return true
+      }
+      return this.collection.meta.constant
+    },
+    filters() {
+      if (!this.collection) {
+        return []
+      }
+      return this.collection.meta.filters
+    },
+    allFiltersSet() {
+      return this.filters
+        .filter(filter => filter.required)
+        .map(filter => this.filterParams[filter.key])
+        .every(param => param)
+    },
+    itemEditQuery() {
+      return this.filters
+        .filter(filter => filter.required)
+        .reduce((query, filter) => {
+          query[filter.key] = this.filterParams[filter.key]
+          return query
+        }, {})
     }
   },
   watch: {
-    // eslint-disable-next-line object-shorthand
-    'store.apiKey'(value) {
-      if (value) {
-        this.load()
+    filterParams: {
+      deep: true,
+      async handler() {
+        if (this.allFiltersSet) {
+          this.fetchItems()
+        }
       }
     }
   },
   created() {
-    if (this.hasAccessToApi) {
-      this.load()
-    }
+    this.load()
   },
   methods: {
     async load() {
@@ -118,18 +192,29 @@ export default {
         this.loadingHtml = 'Loading...'
       }, 50)
 
-      await Promise.all([
-        this.store.fetchMeta(),
-        this.store.fetchListItems()
-      ])
+      await this.store.fetchMeta()
 
+      this.store.setCollection(this.collectionKey)
+
+      this.filters.forEach((filter) => {
+        this.$set(this.filterParams, filter.key, null)
+      })
+
+      if (!this.filters.length) {
+        await this.fetchItems()
+      }
+    },
+    async fetchItems() {
+      this.loading = true
+      await this.collection.fetchListItems(this.filterParams)
       this.loading = false
     },
     confirmDelete(item) {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      await this.store.deleteItem(this.selectedItem[this.store.keyName])
+      const id = this.selectedItem[this.collection.keyName]
+      await this.collection.deleteItem(id, this.filterParams)
       this.selectedItem = null
     },
     onDeleteModalCancel() {
