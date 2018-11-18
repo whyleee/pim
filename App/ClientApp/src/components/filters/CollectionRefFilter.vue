@@ -1,6 +1,7 @@
 <template>
   <b-form-group
     :label="filter.name"
+    :description="filter.description"
     horizontal
   >
     <b-form-select

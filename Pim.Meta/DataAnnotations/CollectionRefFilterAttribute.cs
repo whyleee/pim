@@ -5,8 +5,8 @@ namespace Pim.Meta.DataAnnotations
 {
     public class CollectionRefFilterAttribute : CollectionFilterAttribute
     {
-        public CollectionRefFilterAttribute(string key, string name, string refCollectionKey)
-            : base(key, name)
+        public CollectionRefFilterAttribute(string key, string refCollectionKey)
+            : base(key)
         {
             RefCollectionKey = refCollectionKey;
         }

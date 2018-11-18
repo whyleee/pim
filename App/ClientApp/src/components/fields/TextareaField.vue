@@ -46,7 +46,7 @@ export default {
     },
     readonly() {
       return this.field.attributes.readonly ||
-        (this.field.attributes.constant && this.origValue != null)
+        (this.field.attributes.constant && !!this.origValue)
     },
     validators() {
       return {

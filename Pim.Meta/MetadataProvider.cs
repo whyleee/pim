@@ -67,7 +67,7 @@ namespace Pim.Meta
 
         private string GetCollectionItemsProperty(PropertyInfo prop)
         {
-            return prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty;
+            return Helpers.ToCamelCase(prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty);
         }
 
         private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
@@ -77,7 +77,8 @@ namespace Pim.Meta
                 return new CollectionQueryFilterInfo
                 {
                     Key = attr.Key,
-                    Name = attr.Name,
+                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                    Description = attr.Description,
                     Type = "query",
                     Required = attr.Required
                 };
@@ -88,10 +89,11 @@ namespace Pim.Meta
                 return new CollectionRefFilterInfo
                 {
                     Key = attr.Key,
-                    Name = attr.Name,
+                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                    Description = attr.Description,
                     Type = "ref",
                     Required = attr.Required,
-                    RefCollectionKey = refFilterAttr.RefCollectionKey
+                    RefCollectionKey = Helpers.ToCamelCase(refFilterAttr.RefCollectionKey)
                 };
             }
 
@@ -183,6 +185,10 @@ namespace Pim.Meta
                     {
                         dict["groupName"] = display.GroupName;
                     }
+                }
+                if (attr is ReadFromAttribute readFrom)
+                {
+                    dict["readFrom"] = Helpers.ToCamelCase(readFrom.PropertyName);
                 }
                 if (attr is SelectOptionsAttribute selectOptions)
                 {
