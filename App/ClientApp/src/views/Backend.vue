@@ -81,8 +81,17 @@ export default {
       return !this.requiresApiKey || !!this.store.apiKey
     }
   },
-  async created() {
-    await this.store.fetchMeta()
+  watch: {
+    hasAccessToApi(yes) {
+      if (yes && !this.store.meta) {
+        this.store.fetchMeta()
+      }
+    }
+  },
+  created() {
+    if (this.hasAccessToApi && !this.store.meta) {
+      this.store.fetchMeta()
+    }
   }
 }
 </script>
