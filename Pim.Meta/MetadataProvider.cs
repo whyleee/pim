@@ -105,7 +105,7 @@ namespace Pim.Meta
                     Description = attr.Description,
                     Type = "ref",
                     Required = attr.Required,
-                    RefCollectionKey = Helpers.ToCamelCase(refFilterAttr.RefCollectionKey)
+                    RefCollectionKey = refFilterAttr.RefCollectionKey.ToLowerInvariant()
                 };
             }
 
@@ -132,7 +132,8 @@ namespace Pim.Meta
                 Name = char.ToLower(prop.Name.First()) + prop.Name.Substring(1),
                 Type = GetTypeName(prop.PropertyType),
                 Kind = GetFieldKind(prop),
-                Attributes = GetAttributes(prop)
+                Attributes = GetAttributes(prop),
+                Ref = GetCollectionRefInfo(prop)
             };
 
             if (field.Kind == DataType.Text.ToString())
@@ -151,6 +152,24 @@ namespace Pim.Meta
             }
 
             return field;
+        }
+
+        private CollectionRefInfo GetCollectionRefInfo(PropertyInfo prop)
+        {
+            var collectionRef = prop.GetCustomAttribute<CollectionRefAttribute>();
+
+            if (collectionRef == null)
+            {
+                return null;
+            }
+
+            var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>();
+
+            return new CollectionRefInfo
+            {
+                CollectionKey = collectionRef.CollectionKey.ToLowerInvariant(),
+                Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+            };
         }
 
         private IDictionary<string, object> GetAttributes(PropertyInfo prop)
