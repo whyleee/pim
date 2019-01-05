@@ -114,7 +114,18 @@ export default {
     }
   },
   created() {
-    this.collection.fetchListItems(this.filterParams)
+    const filters = Object.entries(this.field.ref.filters)
+      .reduce((hash, [key, value]) => {
+        hash[key] = value
+
+        Object.entries(this.filterParams).forEach(([fpKey, fpValue]) => {
+          hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
+        })
+
+        return hash
+      }, {})
+
+    this.collection.fetchListItems(filters)
   }
 }
 </script>
