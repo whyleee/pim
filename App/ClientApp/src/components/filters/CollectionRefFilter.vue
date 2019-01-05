@@ -8,6 +8,7 @@
       :value="selectedValue"
       :options="options.map(opt => opt.value)"
       :custom-label="val => options.find(opt => opt.value == val).text"
+      :multiple="filter.multiple"
       label="text"
       @input="onInput"
     />
@@ -35,7 +36,7 @@ export default {
       required: true
     },
     value: {
-      type: [String, Number],
+      type: [String, Number, Array],
       default: ''
     }
   },
@@ -70,19 +71,23 @@ export default {
         value: item[this.collection.keyName]
       }))
 
-      if (!this.filter.required) {
+      if (!this.filter.required && !this.filter.multiple) {
         options.unshift({ text: '', value: '' })
       }
 
       return options
     },
     selectedValue() {
-      if (this.options.some(opt => opt.value == this.value)) {
+      const values = Array.isArray(this.value) ? this.value : [this.value]
+
+      if (values.every(val => this.options.some(opt => opt.value == val))) {
         return this.value
       }
-      if (this.options.length > 0) {
+
+      if (this.options.length > 0 && !this.filter.multiple) {
         return this.options[0].value
       }
+
       return null
     }
   },
