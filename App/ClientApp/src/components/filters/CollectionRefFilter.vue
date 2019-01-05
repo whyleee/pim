@@ -4,16 +4,23 @@
     :description="filter.description"
     horizontal
   >
-    <b-form-select
+    <multiselect
       :value="selectedValue"
-      :options="options"
+      :options="options.map(opt => opt.value)"
+      :custom-label="val => options.find(opt => opt.value == val).text"
+      label="text"
       @input="onInput"
     />
   </b-form-group>
 </template>
 
 <script>
+import Multiselect from 'vue-multiselect'
+
 export default {
+  components: {
+    Multiselect
+  },
   props: {
     store: {
       type: Object,
@@ -28,13 +35,14 @@ export default {
       required: true
     },
     value: {
-      type: String,
+      type: [String, Number],
       default: ''
     }
   },
   data() {
     return {
-      collection: this.store.getCollection(this.filter.refCollectionKey)
+      collection: this.store.getCollection(this.filter.refCollectionKey),
+      origFilterParams: null
     }
   },
   computed: {
@@ -69,7 +77,7 @@ export default {
       return options
     },
     selectedValue() {
-      if (this.options.some(o => o.value == this.value)) {
+      if (this.options.some(opt => opt.value == this.value)) {
         return this.value
       }
       if (this.options.length > 0) {
@@ -80,26 +88,26 @@ export default {
   },
   watch: {
     filterParams: {
-      deep: true,
-      handler() {
-        if (this.allFiltersSet) {
+      handler(value) {
+        if (this.allFiltersSet && JSON.stringify(value) != JSON.stringify(this.origFilterParams)) {
+          this.origFilterParams = value
           this.fetchItems()
         }
       }
     }
   },
-  async created() {
+  created() {
     if (this.allFiltersSet) {
-      await this.fetchItems()
+      this.fetchItems()
+    }
+  },
+  methods: {
+    async fetchItems() {
+      await this.collection.fetchListItems(this.filterParams)
 
       if (this.selectedValue != this.value) {
         this.$emit('input', this.selectedValue)
       }
-    }
-  },
-  methods: {
-    fetchItems() {
-      return this.collection.fetchListItems(this.filterParams)
     },
     onInput(value) {
       this.$emit('input', value)
