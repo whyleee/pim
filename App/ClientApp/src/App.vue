@@ -24,4 +24,22 @@ export default {
 body {
   padding-top: 5rem;
 }
+
+/* vue-multiselect style overrides */
+.multiselect .multiselect__tags {
+  border-radius: 0.25rem;
+}
+.multiselect .multiselect__tags {
+  border-color: #ced4da;
+}
+.multiselect.is-valid .multiselect__tags {
+  border-color: #28a745;
+}
+.multiselect.is-invalid .multiselect__tags {
+  border-color: #dc3545;
+}
+.multiselect .multiselect__placeholder {
+  margin-bottom: 7px;
+  padding-top: 0;
+}
 </style>
