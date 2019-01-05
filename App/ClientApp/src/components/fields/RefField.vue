@@ -52,7 +52,7 @@ export default {
     }
   },
   computed: {
-    filterParams() {
+    itemFilterParams() {
       return this.$route.query
     },
     options() {
@@ -114,18 +114,18 @@ export default {
     }
   },
   created() {
-    const filters = Object.entries(this.field.ref.filters)
+    const filterParams = Object.entries(this.field.ref.filters)
       .reduce((hash, [key, value]) => {
         hash[key] = value
 
-        Object.entries(this.filterParams).forEach(([fpKey, fpValue]) => {
+        Object.entries(this.itemFilterParams).forEach(([fpKey, fpValue]) => {
           hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
         })
 
         return hash
       }, {})
 
-    this.collection.fetchListItems(filters)
+    this.collection.fetchListItems(filterParams)
   }
 }
 </script>

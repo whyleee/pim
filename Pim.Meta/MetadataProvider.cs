@@ -48,10 +48,7 @@ namespace Pim.Meta
                 Constant = GetCollectionConstant(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
                 ItemType = GetTypeInfo(itemType),
-                Filters = collectionProp
-                    .GetCustomAttributes<CollectionFilterAttribute>()
-                    .Select(GetCollectionFilterInfo)
-                    .ToList()
+                Filters = GetCollectionFilterInfos(collectionProp)
             };
         }
 
@@ -82,34 +79,55 @@ namespace Pim.Meta
             return Helpers.ToCamelCase(prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty);
         }
 
-        private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
+        private IEnumerable<CollectionFilterInfo> GetCollectionFilterInfos(PropertyInfo prop)
         {
-            if (attr is CollectionQueryFilterAttribute)
-            {
-                return new CollectionQueryFilterInfo
+            return prop.GetCustomAttributes<CollectionFilterAttribute>()
+                .Select(attr =>
                 {
-                    Key = attr.Key,
-                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
-                    Description = attr.Description,
-                    Type = "query",
-                    Required = attr.Required
-                };
-            }
+                    if (attr is CollectionQueryFilterAttribute queryAttr)
+                    {
+                        return (CollectionFilterInfo) GetCollectionQueryFilter(queryAttr);
+                    }
 
-            if (attr is CollectionRefFilterAttribute refFilterAttr)
+                    if (attr is CollectionRefFilterAttribute refAttr)
+                    {
+                        var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
+                            .Where(valueAttr => valueAttr.RefKey == refAttr.Key)
+                            .ToList();
+
+                        return (CollectionFilterInfo) GetCollectionRefFilter(refAttr, filterValues);
+                    }
+
+                    throw new ArgumentException("Unknown filter attribute");
+                })
+                .ToList();
+        }
+
+        private CollectionQueryFilterInfo GetCollectionQueryFilter(CollectionQueryFilterAttribute attr)
+        {
+            return new CollectionQueryFilterInfo
             {
-                return new CollectionRefFilterInfo
-                {
-                    Key = attr.Key,
-                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
-                    Description = attr.Description,
-                    Type = "ref",
-                    Required = attr.Required,
-                    RefCollectionKey = refFilterAttr.RefCollectionKey.ToLowerInvariant()
-                };
-            }
+                Key = attr.Key,
+                Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                Description = attr.Description,
+                Type = "query",
+                Required = attr.Required
+            };
+        }
 
-            throw new ArgumentException("Unknown filter attribute");
+        private CollectionRefFilterInfo GetCollectionRefFilter(CollectionRefFilterAttribute attr, IEnumerable<CollectionRefFilterValueAttribute> filterValues)
+        {
+            return new CollectionRefFilterInfo
+            {
+                Key = attr.Key,
+                Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                Description = attr.Description,
+                Type = "ref",
+                Required = attr.Required,
+                RefCollectionKey = attr.RefCollectionKey.ToLowerInvariant(),
+                Multiple = attr.Multiple,
+                Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+            };
         }
 
         private ItemTypeInfo GetTypeInfo(Type type)
@@ -163,7 +181,9 @@ namespace Pim.Meta
                 return null;
             }
 
-            var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>();
+            var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
+                .Where(attr => attr.RefKey == collectionRef.CollectionKey)
+                .ToList();
 
             return new CollectionRefInfo
             {

@@ -12,5 +12,7 @@ namespace Pim.Meta.DataAnnotations
         }
 
         public string RefCollectionKey { get; }
+
+        public bool Multiple { get; set; }
     }
 }

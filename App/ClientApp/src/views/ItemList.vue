@@ -38,6 +38,7 @@
               v-else-if="filter.type == 'ref'"
               :store="store"
               :filter="filter"
+              :list-filter-params="filterParams"
               v-model="filterParams[filter.key]"
             />
           </b-col>
@@ -176,7 +177,7 @@ export default {
   watch: {
     filterParams: {
       deep: true,
-      async handler() {
+      handler() {
         if (this.allFiltersSet) {
           this.fetchItems()
         }
