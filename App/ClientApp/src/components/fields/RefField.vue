@@ -3,8 +3,10 @@
     <multiselect
       v-validate="validators"
       v-model="value"
-      :options="options.map(opt => opt[collection.keyName])"
+      :options="options"
       :custom-label="getLabel"
+      :group-values="isGrouped ? 'items' : undefined"
+      :group-label="isGrouped ? 'name' : undefined"
       :multiple="multiple"
       :name="field.name"
       :disabled="readonly"
@@ -46,7 +48,6 @@ export default {
   },
   data() {
     return {
-      collection: store.backend.getCollection(this.field.ref.collectionKey),
       dirty: false
     }
   },
@@ -54,8 +55,47 @@ export default {
     itemFilterParams() {
       return this.$route.query
     },
+    refs() {
+      return Array.isArray(this.field.ref) ? this.field.ref : [this.field.ref]
+    },
+    collections() {
+      return this.refs.reduce((hash, ref) => {
+        hash[ref.collectionKey] = store.backend.getCollection(ref.collectionKey)
+        return hash
+      }, {})
+    },
+    groups() {
+      return this.refs
+        .map(ref => this.collections[ref.collectionKey])
+        .map(collection => ({
+          name: collection.meta.name,
+          keyName: collection.keyName,
+          items: collection.listItems || []
+        }))
+    },
+    isGrouped() {
+      return this.groups.length > 1
+    },
     options() {
-      return (this.collection.listItems || [])
+      if (!this.isGrouped) {
+        return this.groups[0].items.map(item => item[this.groups[0].keyName])
+      }
+
+      return this.groups.map(group => ({
+        name: group.name,
+        items: group.items.map(item => item[group.keyName])
+      }))
+    },
+    labels() {
+      const labels = {}
+
+      this.groups.forEach((group) => {
+        group.items.forEach((item) => {
+          labels[item[group.keyName]] = item.name
+        })
+      })
+
+      return labels
     },
     value: {
       get() {
@@ -117,25 +157,24 @@ export default {
     }
   },
   created() {
-    const filterParams = Object.entries(this.field.ref.filters)
-      .reduce((hash, [key, value]) => {
-        hash[key] = value
+    this.refs.forEach((ref) => {
+      const filterParams = Object.entries(ref.filters)
+        .reduce((hash, [key, value]) => {
+          hash[key] = value
 
-        Object.entries(this.itemFilterParams).forEach(([fpKey, fpValue]) => {
-          hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
-        })
+          Object.entries(this.itemFilterParams).forEach(([fpKey, fpValue]) => {
+            hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
+          })
 
-        return hash
-      }, {})
+          return hash
+        }, {})
 
-    this.collection.fetchListItems(filterParams)
+      this.collections[ref.collectionKey].fetchListItems(filterParams)
+    })
   },
   methods: {
     getLabel(key) {
-      const option = this.options
-        .find(opt => opt[this.collection.keyName] == key)
-
-      return option ? option.name : key
+      return this.labels[key] || key
     }
   }
 }

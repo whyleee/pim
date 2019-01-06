@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Pim.Meta.DataAnnotations
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class CollectionRefAttribute : Attribute
     {
         public CollectionRefAttribute(string collectionKey)
@@ -12,7 +12,5 @@ namespace Pim.Meta.DataAnnotations
         }
 
         public string CollectionKey { get; }
-
-        public IDictionary<string, object> Filters { get; set; }
     }
 }

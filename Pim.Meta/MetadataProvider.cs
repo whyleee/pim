@@ -172,24 +172,24 @@ namespace Pim.Meta
             return field;
         }
 
-        private CollectionRefInfo GetCollectionRefInfo(PropertyInfo prop)
+        private object GetCollectionRefInfo(PropertyInfo prop)
         {
-            var collectionRef = prop.GetCustomAttribute<CollectionRefAttribute>();
+            var refs = prop.GetCustomAttributes<CollectionRefAttribute>()
+                .Select(attr =>
+                {
+                    var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
+                        .Where(valueAttr => valueAttr.RefKey == attr.CollectionKey)
+                        .ToList();
 
-            if (collectionRef == null)
-            {
-                return null;
-            }
-
-            var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
-                .Where(attr => attr.RefKey == collectionRef.CollectionKey)
+                    return new CollectionRefInfo
+                    {
+                        CollectionKey = attr.CollectionKey.ToLowerInvariant(),
+                        Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+                    };
+                })
                 .ToList();
 
-            return new CollectionRefInfo
-            {
-                CollectionKey = collectionRef.CollectionKey.ToLowerInvariant(),
-                Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
-            };
+            return refs.Count > 1 ? (object) refs : refs.Count == 1 ? refs.Single() : null;
         }
 
         private IDictionary<string, object> GetAttributes(PropertyInfo prop)
