@@ -2,8 +2,10 @@
   <div>
     <multiselect
       v-validate="validators"
-      v-model="selectedOption"
-      :options="options"
+      v-model="value"
+      :options="options.map(opt => opt[collection.keyName])"
+      :custom-label="getLabel"
+      :multiple="multiple"
       :name="field.name"
       :disabled="readonly"
       :data-vv-as="field.attributes.displayName"
@@ -11,7 +13,6 @@
         'is-valid': state === true,
         'is-invalid': state === false
       }"
-      label="name"
     />
   </div>
 </template>
@@ -56,18 +57,12 @@ export default {
     options() {
       return (this.collection.listItems || [])
     },
-    selectedOption: {
-      get() {
-        return (this.collection.listItems || [])
-          .find(option => option[this.collection.keyName] == this.value)
-      },
-      set(option) {
-        this.value = option[this.collection.keyName]
-      }
-    },
     value: {
       get() {
-        return this.item[(!this.dirty && this.readFrom) || this.field.name]
+        if (!this.dirty && this.readFrom && this.item[this.readFrom] !== undefined) {
+          return this.item[this.readFrom]
+        }
+        return this.item[this.field.name]
       },
       set(value) {
         this.item[this.field.name] = value
@@ -75,14 +70,21 @@ export default {
       }
     },
     origValue() {
-      return this.origItem[this.readFrom || this.field.name]
+      if (this.readFrom && this.origItem[this.readFrom] !== undefined) {
+        return this.origItem[this.readFrom]
+      }
+      return this.origItem[this.field.name]
     },
     readFrom() {
       return this.field.attributes.readFrom
     },
     readonly() {
       return this.field.attributes.readonly ||
-        (this.field.attributes.constant && !!this.origValue)
+        (this.field.attributes.constant &&
+          (this.multiple ? this.origValue.length > 0 : !!this.origValue))
+    },
+    multiple() {
+      return this.field.type == 'array'
     },
     validators() {
       return {
@@ -108,6 +110,9 @@ export default {
       if (!this.value && !this.origValue) {
         return false
       }
+      if (this.multiple && this.value && this.origValue) {
+        return JSON.stringify(this.value) != JSON.stringify(this.origValue)
+      }
       return this.value != this.origValue
     }
   },
@@ -124,6 +129,14 @@ export default {
       }, {})
 
     this.collection.fetchListItems(filterParams)
+  },
+  methods: {
+    getLabel(key) {
+      const option = this.options
+        .find(opt => opt[this.collection.keyName] == key)
+
+      return option ? option.name : key
+    }
   }
 }
 </script>
