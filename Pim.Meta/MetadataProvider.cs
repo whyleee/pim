@@ -201,19 +201,19 @@ namespace Pim.Meta
                 Ref = GetCollectionRefInfo(prop)
             };
 
-            if (field.Kind == DataType.Text.ToString())
-            {
-                field.Type = GetTypeName(typeof(string));
-                field.Kind = "array";
-            }
-
-            var itemType = IsCollection(prop.PropertyType)
+            var isCollection = IsCollection(prop.PropertyType);
+            var itemType = isCollection
                 ? prop.PropertyType.GetGenericArguments().First()
                 : prop.PropertyType;
 
             if (!IsSimpleType(itemType))
             {
                 field.ComplexType = GetTypeInfo(itemType);
+            }
+
+            if (isCollection && IsSimpleType(itemType))
+            {
+                field.Kind = GetTypeName(itemType);
             }
 
             return field;

@@ -121,7 +121,16 @@ export default {
         return this.item[this.field.name]
       },
       set(value) {
-        this.item[this.field.name] = value
+        let converted = value
+
+        if (value && this.field.type == 'string') {
+          converted = value.toString()
+        }
+        if (value && this.multiple && this.field.kind == 'string') {
+          converted = value.map(val => val.toString())
+        }
+
+        this.item[this.field.name] = converted
         this.dirty = true
       }
     },
@@ -215,7 +224,7 @@ export default {
     getLabel(key) {
       return this.labels[key] || key
     },
-    // TODO: temp fix for parent id in path string
+    // TODO: temp fix for parent id in path string [probably must be a plugin]
     fixReadFromValue(value) {
       if (value && value.startsWith('/') && value.endsWith('/')) {
         return value.split('/').filter(x => x).slice(-2)[0] || value
