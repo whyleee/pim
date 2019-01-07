@@ -124,6 +124,9 @@ function createCollection(meta, dataApi) {
     updateItem(id, data, params = {}) {
       return catchError(() => dataApi.put(id, data, params))
     },
+    patchItem(id, data, params = {}) {
+      return catchError(() => dataApi.patch(id, data, params))
+    },
     async deleteItem(id, params = {}) {
       await catchError(() => dataApi.delete(id, params))
 

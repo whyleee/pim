@@ -8,6 +8,8 @@ namespace Pim.Meta.DataAnnotations
     {
         public string Path { get; set; }
 
+        public HttpUpdateMethod UpdateMethod { get; set; }
+
         public bool Readonly { get; set; }
 
         public bool Constant { get; set; }

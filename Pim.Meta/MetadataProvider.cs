@@ -44,6 +44,7 @@ namespace Pim.Meta
                 Key = collectionProp.Name.ToLowerInvariant(),
                 Name = GetCollectionName(collectionProp),
                 Path = GetCollectionPath(collectionProp),
+                UpdateMethod = GetCollectionUpdateMethod(collectionProp),
                 Readonly = GetCollectionReadOnly(collectionProp),
                 Constant = GetCollectionConstant(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
@@ -63,6 +64,12 @@ namespace Pim.Meta
         {
             return prop.GetCustomAttribute<CollectionAttribute>()?.Path
                 ?? $"/{prop.Name.ToLowerInvariant()}";
+        }
+
+        private string GetCollectionUpdateMethod(PropertyInfo prop)
+        {
+            return (prop.GetCustomAttribute<CollectionAttribute>()?.UpdateMethod ?? HttpUpdateMethod.Put)
+                .ToString().ToLowerInvariant();
         }
 
         private bool GetCollectionReadOnly(PropertyInfo prop)

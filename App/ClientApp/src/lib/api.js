@@ -71,6 +71,13 @@ export default {
           put(id, item, params = {}) {
             return http.put(`${this.url(params)}/${this.idUrl(id)}`, item)
           },
+          patch(id, patch, params = {}) {
+            return http.patch(`${this.url(params)}/${this.idUrl(id)}`, patch, {
+              headers: {
+                'content-type': 'application/merge-patch+json'
+              }
+            })
+          },
           delete(id, params = {}) {
             return http.delete(`${this.url(params)}/${this.idUrl(id)}`)
           }

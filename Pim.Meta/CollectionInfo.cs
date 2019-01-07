@@ -17,6 +17,9 @@ namespace Pim.Meta
         public string Path { get; set; }
 
         [DataMember(EmitDefaultValue = false)]
+        public string UpdateMethod { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
         public bool Readonly { get; set; }
 
         [DataMember(EmitDefaultValue = false)]

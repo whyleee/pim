@@ -207,6 +207,17 @@ export default {
     hasPendingChanges() {
       return JSON.stringify(this.form) != JSON.stringify(this.origItem)
     },
+    itemPatch() {
+      const patch = {}
+
+      Object.entries(this.form).forEach(([key, value]) => {
+        if (JSON.stringify(value) != JSON.stringify(this.origItem[key])) {
+          patch[key] = value
+        }
+      })
+
+      return patch
+    },
     saveButtonVariant() {
       if (this.hasErrors) {
         return 'danger'
@@ -253,7 +264,11 @@ export default {
 
       try {
         if (this.itemId) {
-          await this.collection.updateItem(this.itemId, this.form, this.filterParams)
+          if (this.collection.meta.updateMethod == 'patch') {
+            await this.collection.patchItem(this.itemId, this.itemPatch, this.filterParams)
+          } else {
+            await this.collection.updateItem(this.itemId, this.form, this.filterParams)
+          }
         } else {
           await this.collection.createItem(this.form, this.filterParams)
         }
