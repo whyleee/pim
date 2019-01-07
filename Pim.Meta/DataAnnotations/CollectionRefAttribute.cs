@@ -12,5 +12,7 @@ namespace Pim.Meta.DataAnnotations
         }
 
         public string CollectionKey { get; }
+
+        public string BackendKey { get; set; }
     }
 }

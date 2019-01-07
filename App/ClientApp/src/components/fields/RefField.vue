@@ -48,6 +48,9 @@ export default {
   },
   data() {
     return {
+      // TODO: hacks to make `collections` and `groups` reactive on store changes
+      resolvedBackendMetas: [],
+      resolvedListItems: [],
       dirty: false
     }
   },
@@ -60,13 +63,21 @@ export default {
     },
     collections() {
       return this.refs.reduce((hash, ref) => {
-        hash[ref.collectionKey] = store.backend.getCollection(ref.collectionKey)
+        // eslint-disable-next-line no-unused-vars
+        const reactivityTrigger = this.resolvedBackendMetas.length
+
+        const backend = this.getBackend(ref)
+        hash[this.getRefKey(ref)] = backend.getCollection(ref.collectionKey)
         return hash
       }, {})
     },
     groups() {
+      // eslint-disable-next-line no-unused-vars
+      const reactivityTrigger = this.resolvedListItems.length
+
       return this.refs
-        .map(ref => this.collections[ref.collectionKey])
+        .map(ref => this.collections[this.getRefKey(ref)])
+        .filter(collection => collection)
         .map(collection => ({
           name: collection.meta.name,
           getKey: collection.getKey,
@@ -78,6 +89,10 @@ export default {
       return this.groups.length > 1
     },
     options() {
+      if (this.groups.length == 0) {
+        return []
+      }
+
       if (!this.isGrouped) {
         return this.groups[0].items.map(item => this.groups[0].getKey(item))
       }
@@ -157,8 +172,18 @@ export default {
       return this.value != this.origValue
     }
   },
-  created() {
-    this.refs.forEach((ref) => {
+  async created() {
+    const backendMetaPromises = this.refs
+      .map(ref => this.getBackend(ref))
+      .filter(backend => !backend.meta && backend.config.key != store.backend.config.key)
+      .map(backend => backend.fetchMeta())
+
+    if (backendMetaPromises.length > 0) {
+      await Promise.all(backendMetaPromises)
+      this.resolvedBackendMetas.push(...backendMetaPromises)
+    }
+
+    const collectionPromises = this.refs.map((ref) => {
       const filterParams = Object.entries(ref.filters)
         .reduce((hash, [key, value]) => {
           hash[key] = value
@@ -170,10 +195,23 @@ export default {
           return hash
         }, {})
 
-      this.collections[ref.collectionKey].fetchListItems(filterParams)
+      const backend = this.getBackend(ref)
+      const collection = backend.getCollection(ref.collectionKey)
+
+      return collection.fetchListItems(filterParams)
     })
+
+    await Promise.all(collectionPromises)
+    this.resolvedListItems.push(...collectionPromises)
   },
   methods: {
+    getBackend(ref) {
+      return ref.backendKey ? store.getBackend(ref.backendKey) : store.backend
+    },
+    getRefKey(ref) {
+      const backend = this.getBackend(ref)
+      return `${backend.config.key}:${ref.collectionKey}`
+    },
     getLabel(key) {
       return this.labels[key] || key
     },

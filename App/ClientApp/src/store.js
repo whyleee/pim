@@ -1,17 +1,27 @@
 import apiFactory from '@/lib/api'
+import globalConfig from '@/config.json'
 
 const backends = {}
 const store = {
   backend: null,
   error: null,
 
-  setBackend(config) {
-    if (!backends[config.key]) {
-      // eslint-disable-next-line no-use-before-define
-      backends[config.key] = createBackend(config)
+  getBackend(key) {
+    const config = globalConfig.backends.find(b => b.key == key)
+
+    if (!config) {
+      throw new Error(`Unknown backend key '${key}'`)
     }
 
-    this.backend = backends[config.key]
+    if (!backends[key]) {
+      // eslint-disable-next-line no-use-before-define
+      backends[key] = createBackend(config)
+    }
+
+    return backends[key]
+  },
+  setBackend(config) {
+    this.backend = this.getBackend(config.key)
   }
 }
 
@@ -70,6 +80,9 @@ function createBackend(config) {
     },
     getCollection(key) {
       if (!collections[key]) {
+        if (!this.meta) {
+          return null // TODO: this case must be handled with reactivity
+        }
         const collectionMeta = this.meta.collections.find(c => c.key == key)
         const dataApi = api.createDataApi(collectionMeta)
 

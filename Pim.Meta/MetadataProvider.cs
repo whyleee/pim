@@ -222,6 +222,7 @@ namespace Pim.Meta
 
                     return new CollectionRefInfo
                     {
+                        BackendKey = attr.BackendKey?.ToLowerInvariant(),
                         CollectionKey = attr.CollectionKey.ToLowerInvariant(),
                         Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
                     };
