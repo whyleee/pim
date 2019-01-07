@@ -100,7 +100,7 @@ export default {
     value: {
       get() {
         if (!this.dirty && this.readFrom && this.item[this.readFrom] !== undefined) {
-          return this.item[this.readFrom]
+          return this.fixReadFromValue(this.item[this.readFrom])
         }
         return this.item[this.field.name]
       },
@@ -111,7 +111,7 @@ export default {
     },
     origValue() {
       if (this.readFrom && this.origItem[this.readFrom] !== undefined) {
-        return this.origItem[this.readFrom]
+        return this.fixReadFromValue(this.origItem[this.readFrom])
       }
       return this.origItem[this.field.name]
     },
@@ -175,6 +175,13 @@ export default {
   methods: {
     getLabel(key) {
       return this.labels[key] || key
+    },
+    // TODO: temp fix for parent id in path string
+    fixReadFromValue(value) {
+      if (value && value.startsWith('/') && value.endsWith('/')) {
+        return value.split('/').filter(x => x).slice(-2)[0] || value
+      }
+      return value
     }
   }
 }
