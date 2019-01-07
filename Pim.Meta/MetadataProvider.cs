@@ -132,15 +132,48 @@ namespace Pim.Meta
 
         private ItemTypeInfo GetTypeInfo(Type type)
         {
+            var fields = GetFields(type);
+            InsertAdditionalGetModelFields(type, fields);
+
             return new ItemTypeInfo
             {
                 Name = type.Name,
-                Fields = type.GetProperties()
-                    .Where(ShouldScaffold)
-                    .Select(GetTypeFieldInfo)
-                    .ToList(),
+                Fields = fields.Select(GetTypeFieldInfo).ToList(),
                 DefaultItem = Activator.CreateInstance(type)
             };
+        }
+
+        private List<PropertyInfo> GetFields(Type type)
+        {
+            return type.GetProperties().Where(ShouldScaffold).ToList();
+        }
+
+        private void InsertAdditionalGetModelFields(Type type, List<PropertyInfo> fields)
+        {
+            var getModel = type.GetCustomAttribute<GetModelAttribute>();
+
+            if (getModel == null)
+            {
+                return;
+            }
+
+            var getModelFields = GetFields(getModel.Type);
+            var lastFoundIndex = -1;
+
+            foreach (var prop in getModelFields)
+            {
+                var index = fields.FindIndex(p => p.Name == prop.Name);
+
+                if (index == -1)
+                {
+                    fields.Insert(lastFoundIndex + 1, prop);
+                    lastFoundIndex += 1;
+                }
+                else
+                {
+                    lastFoundIndex = index;
+                }
+            }
         }
 
         private ItemFieldInfo GetTypeFieldInfo(PropertyInfo prop)
