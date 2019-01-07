@@ -175,7 +175,7 @@ export default {
       }
       if (this.item) {
         return this.item[this.collection.titleName]
-          || this.item[this.collection.keyName]
+          || this.collection.getKey(this.item)
       }
       return 'New Item'
     },

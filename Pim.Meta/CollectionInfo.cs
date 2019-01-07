@@ -25,6 +25,9 @@ namespace Pim.Meta
         [DataMember(EmitDefaultValue = false)]
         public string ItemsProperty { get; set; }
 
+        [DataMember(EmitDefaultValue = false)]
+        public string KeyDelimiter { get; set; }
+
         [DataMember]
         public ItemTypeInfo ItemType { get; set; }
 

@@ -67,8 +67,8 @@ export default {
     },
     options() {
       const options = (this.collection.listItems || []).map(item => ({
-        text: item[this.collection.titleName] || item[this.collection.keyName],
-        value: item[this.collection.keyName]
+        text: item[this.collection.titleName] || this.collection.getKey(item),
+        value: this.collection.getKey(item)
       }))
 
       if (!this.filter.required && !this.filter.multiple) {

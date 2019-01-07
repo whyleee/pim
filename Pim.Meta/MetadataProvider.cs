@@ -47,6 +47,7 @@ namespace Pim.Meta
                 Readonly = GetCollectionReadOnly(collectionProp),
                 Constant = GetCollectionConstant(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
+                KeyDelimiter = GetCollectionKeyDelimiter(collectionProp),
                 ItemType = GetTypeInfo(itemType),
                 Filters = GetCollectionFilterInfos(collectionProp)
             };
@@ -77,6 +78,11 @@ namespace Pim.Meta
         private string GetCollectionItemsProperty(PropertyInfo prop)
         {
             return Helpers.ToCamelCase(prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty);
+        }
+
+        private string GetCollectionKeyDelimiter(PropertyInfo prop)
+        {
+            return prop.GetCustomAttribute<CollectionAttribute>()?.KeyDelimiter;
         }
 
         private IEnumerable<CollectionFilterInfo> GetCollectionFilterInfos(PropertyInfo prop)

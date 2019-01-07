@@ -13,5 +13,7 @@ namespace Pim.Meta.DataAnnotations
         public bool Constant { get; set; }
 
         public string ItemsProperty { get; set; }
+
+        public string KeyDelimiter { get; set; }
     }
 }

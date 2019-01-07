@@ -58,20 +58,20 @@
       >
         <b-list-group-item
           v-for="item in collection.listItems"
-          :key="item[collection.keyName]"
+          :key="collection.getKey(item)"
         >
           <template v-if="readonly || constant">
-            {{ item[collection.titleName] || `[${item[collection.keyName]}]` }}
+            {{ item[collection.titleName] || `[${collection.getKey(item)}]` }}
           </template>
           <b-link
             v-else
             :to="{
               name: `${backend.key}-edit`,
-              params: { collection: collectionKey, id: item[collection.keyName] },
+              params: { collection: collectionKey, id: collection.getKey(item) },
               query: itemEditQuery
             }"
           >
-            {{ item[collection.titleName] || `[${item[collection.keyName]}]` }}
+            {{ item[collection.titleName] || `[${collection.getKey(item)}]` }}
           </b-link>
           <b-link
             v-if="!readonly && !constant"
@@ -90,7 +90,7 @@
         >
           <p v-if="selectedItem">
             Are you sure you want to delete item "
-            {{ selectedItem[collection.titleName] || selectedItem[collection.keyName] }}"?
+            {{ selectedItem[collection.titleName] || collection.getKey(selectedItem) }}"?
           </p>
         </b-modal>
       </b-list-group>
@@ -215,7 +215,7 @@ export default {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      const id = this.selectedItem[this.collection.keyName]
+      const id = this.collection.getKey(this.selectedItem)
       await this.collection.deleteItem(id, this.filterParams)
       this.selectedItem = null
     },

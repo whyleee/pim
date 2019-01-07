@@ -90,9 +90,9 @@ function createCollection(meta, dataApi) {
     meta,
     listItems: null,
 
-    get keyName() {
-      const keyField = meta.itemType.fields.find(field => field.attributes.key)
-      return keyField ? keyField.name : 'id'
+    getKey(item) {
+      const keyFields = meta.itemType.fields.filter(field => field.attributes.key)
+      return keyFields.map(field => item[field.name]).join('~') || item.id
     },
     get titleName() {
       const titleField = meta.itemType.fields.find(field => field.attributes.title)
@@ -114,7 +114,7 @@ function createCollection(meta, dataApi) {
     async deleteItem(id, params = {}) {
       await catchError(() => dataApi.delete(id, params))
 
-      const index = this.listItems.findIndex(i => i[this.keyName] == id)
+      const index = this.listItems.findIndex(i => this.getKey(i) == id)
       this.listItems.splice(index, 1)
     }
   }

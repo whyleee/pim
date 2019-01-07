@@ -69,7 +69,7 @@ export default {
         .map(ref => this.collections[ref.collectionKey])
         .map(collection => ({
           name: collection.meta.name,
-          keyName: collection.keyName,
+          getKey: collection.getKey,
           titleName: collection.titleName,
           items: collection.listItems || []
         }))
@@ -79,12 +79,12 @@ export default {
     },
     options() {
       if (!this.isGrouped) {
-        return this.groups[0].items.map(item => item[this.groups[0].keyName])
+        return this.groups[0].items.map(item => this.groups[0].getKey(item))
       }
 
       return this.groups.map(group => ({
         name: group.name,
-        items: group.items.map(item => item[group.keyName])
+        items: group.items.map(item => group.getKey(item))
       }))
     },
     labels() {
@@ -92,7 +92,7 @@ export default {
 
       this.groups.forEach((group) => {
         group.items.forEach((item) => {
-          labels[item[group.keyName]] = item[group.titleName]
+          labels[group.getKey(item)] = item[group.titleName]
         })
       })
 
