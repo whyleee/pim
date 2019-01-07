@@ -233,6 +233,7 @@ namespace Pim.Meta
 
         private IDictionary<string, object> GetAttributes(PropertyInfo prop)
         {
+            var propType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
             var attrs = prop.GetCustomAttributes();
             var dict = new Dictionary<string, object>();
 
@@ -297,9 +298,9 @@ namespace Pim.Meta
                 }
             }
 
-            if (prop.PropertyType.IsEnum && !dict.ContainsKey("selectOptions"))
+            if (propType.IsEnum && !dict.ContainsKey("selectOptions"))
             {
-                var optionProvider = new EnumSelectOptionProvider(prop.PropertyType);
+                var optionProvider = new EnumSelectOptionProvider(propType);
                 dict["selectOptions"] = optionProvider.GetOptions();
             }
 

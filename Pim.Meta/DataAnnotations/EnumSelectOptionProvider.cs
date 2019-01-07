@@ -35,7 +35,7 @@ namespace Pim.Meta.DataAnnotations
                 return attr.Value;
             }
 
-            return name;
+            return Helpers.ToCamelCase(name);
         }
     }
 }
