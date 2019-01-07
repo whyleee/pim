@@ -7,6 +7,9 @@ namespace Pim.Meta
     [DataContract]
     public class CollectionRefFilterInfo : CollectionFilterInfo
     {
+        [DataMember(EmitDefaultValue = false)]
+        public string RefBackendKey { get; set; }
+
         [DataMember]
         public string RefCollectionKey { get; set; }
 

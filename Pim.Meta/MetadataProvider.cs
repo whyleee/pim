@@ -130,6 +130,7 @@ namespace Pim.Meta
                 Description = attr.Description,
                 Type = "ref",
                 Required = attr.Required,
+                RefBackendKey = attr.BackendKey?.ToLowerInvariant(),
                 RefCollectionKey = attr.RefCollectionKey.ToLowerInvariant(),
                 Multiple = attr.Multiple,
                 Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)

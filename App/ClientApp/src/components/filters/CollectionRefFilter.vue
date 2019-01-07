@@ -17,16 +17,13 @@
 
 <script>
 import Multiselect from 'vue-multiselect'
+import store from '@/store'
 
 export default {
   components: {
     Multiselect
   },
   props: {
-    store: {
-      type: Object,
-      required: true
-    },
     filter: {
       type: Object,
       required: true
@@ -41,8 +38,13 @@ export default {
     }
   },
   data() {
+    const backend = this.filter.refBackendKey
+      ? store.getBackend(this.filter.refBackendKey)
+      : store.backend
+
     return {
-      collection: this.store.getCollection(this.filter.refCollectionKey),
+      backend,
+      collection: backend.getCollection(this.filter.refCollectionKey),
       origFilterParams: null
     }
   },
@@ -66,6 +68,10 @@ export default {
         .every(val => val && !val.startsWith('{') && !val.endsWith('}'))
     },
     options() {
+      if (this.collection == null) {
+        return []
+      }
+
       const options = (this.collection.listItems || []).map(item => ({
         text: item[this.collection.titleName] || this.collection.getKey(item),
         value: this.collection.getKey(item)
@@ -101,13 +107,22 @@ export default {
       }
     }
   },
-  created() {
+  async created() {
+    if (!this.backend.meta && this.backend.config.key != store.backend.config.key) {
+      await this.backend.fetchMeta()
+      this.collection = this.backend.getCollection(this.filter.refCollectionKey)
+    }
+
     if (this.allFiltersSet) {
       this.fetchItems()
     }
   },
   methods: {
     async fetchItems() {
+      if (this.collection == null) {
+        return
+      }
+
       await this.collection.fetchListItems(this.filterParams)
 
       if (this.selectedValue != this.value) {

@@ -36,7 +36,6 @@
             />
             <CollectionRefFilter
               v-else-if="filter.type == 'ref'"
-              :store="store"
               :filter="filter"
               :list-filter-params="filterParams"
               v-model="filterParams[filter.key]"
