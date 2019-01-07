@@ -101,7 +101,8 @@ export default Vue.component('Field', {
       if (this.field.type == 'datetime') {
         return DateField
       }
-      if (this.field.type == 'array') {
+      if (this.field.type == 'array'
+        && this.field.attributes.selectOptions) {
         return SelectManyField
       }
       if (this.field.type == 'string') {

@@ -43,7 +43,7 @@ export default {
         if (this.type == 'number') {
           parsed = Number(value)
         }
-        if (this.field.kind == 'array' && typeof value == 'string') {
+        if (this.field.type == 'array' && typeof value == 'string') {
           parsed = value.split(',')
         }
 
@@ -105,6 +105,9 @@ export default {
     isModified() {
       if (!this.value && !this.origValue) {
         return false
+      }
+      if (this.field.type == 'array' && this.value && this.origValue) {
+        return JSON.stringify(this.value) != JSON.stringify(this.origValue)
       }
       return this.value != this.origValue
     }
