@@ -67,7 +67,7 @@ export default {
     },
     options() {
       const options = (this.collection.listItems || []).map(item => ({
-        text: item.name,
+        text: item[this.collection.titleName] || item[this.collection.keyName],
         value: item[this.collection.keyName]
       }))
 

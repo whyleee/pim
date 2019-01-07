@@ -94,6 +94,10 @@ function createCollection(meta, dataApi) {
       const keyField = meta.itemType.fields.find(field => field.attributes.key)
       return keyField ? keyField.name : 'id'
     },
+    get titleName() {
+      const titleField = meta.itemType.fields.find(field => field.attributes.title)
+      return titleField ? titleField.name : 'name'
+    },
 
     async fetchListItems(params = {}) {
       this.listItems = await catchError(() => dataApi.get(params))

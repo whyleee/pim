@@ -70,6 +70,7 @@ export default {
         .map(collection => ({
           name: collection.meta.name,
           keyName: collection.keyName,
+          titleName: collection.titleName,
           items: collection.listItems || []
         }))
     },
@@ -91,7 +92,7 @@ export default {
 
       this.groups.forEach((group) => {
         group.items.forEach((item) => {
-          labels[item[group.keyName]] = item.name
+          labels[item[group.keyName]] = item[group.titleName]
         })
       })
 

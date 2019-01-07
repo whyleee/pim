@@ -205,6 +205,10 @@ namespace Pim.Meta
                 {
                     dict["key"] = true;
                 }
+                if (attr is TitleAttribute)
+                {
+                    dict["title"] = true;
+                }
                 if (attr is ReadOnlyAttribute)
                 {
                     dict["readonly"] = true;
