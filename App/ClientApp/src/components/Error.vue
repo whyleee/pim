@@ -1,11 +1,24 @@
 <template>
   <b-modal
     :visible="!!store.error"
-    title="Error"
+    :title="title"
     ok-only
     @ok="onOk"
   >
-    {{ errorMessage }}
+    <p v-if="url">
+      {{ httpMethod }} <b-link :href="url">{{ url }}</b-link>
+    </p>
+
+    <b-button
+      variant="link"
+      @click="toggleDetails"
+    >
+      {{ detailed ? 'Hide' : 'See' }} details
+    </b-button>
+
+    <p v-if="detailed">
+      <pre>{{ errorDetails }}</pre>
+    </p>
   </b-modal>
 </template>
 
@@ -15,26 +28,51 @@ import store from '@/store'
 export default {
   data() {
     return {
-      store
+      store,
+      detailed: false
     }
   },
   computed: {
-    errorMessage() {
-      const { error } = this.store
+    error() {
+      return this.store.error || ''
+    },
+    title() {
+      let title = 'API Error'
 
-      if (!error) {
-        return ''
+      if (this.error.message) {
+        title += `: ${this.error.message}`
       }
-      if (error.response && error.response.data) {
-        return error.response.data
+      return title
+    },
+    url() {
+      const { config } = this.error
+
+      return config ? config.url : null
+    },
+    httpMethod() {
+      const { config } = this.error
+
+      if (config && config.method) {
+        return config.method.toUpperCase()
       }
 
-      return error
+      return null
+    },
+    errorDetails() {
+      if (this.error.response && this.error.response.data) {
+        return this.error.response.data
+      }
+
+      return this.error
     }
   },
   methods: {
     onOk() {
       this.store.error = null
+      this.detailed = false
+    },
+    toggleDetails() {
+      this.detailed = !this.detailed
     }
   }
 }
