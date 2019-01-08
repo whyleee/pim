@@ -2,6 +2,7 @@
   <div>
     <multiselect
       v-validate="validators"
+      v-if="hasAccessToApi"
       v-model="value"
       :options="options"
       :custom-label="getLabel"
@@ -16,16 +17,27 @@
         'is-invalid': state === false
       }"
     />
+
+    <template v-else>
+      <Authorize
+        v-for="backend in notAuthorizedBackends"
+        :key="backend.config.key"
+        :backend="backend"
+        :button-text="`Authorize ${backend.config.title}`"
+      />
+    </template>
   </div>
 </template>
 
 <script>
-import Multiselect from 'vue-multiselect'
 import store from '@/store'
+import Authorize from '@/components/Authorize.vue'
+import Multiselect from 'vue-multiselect'
 
 export default {
   inject: ['$validator'],
   components: {
+    Authorize,
     Multiselect
   },
   props: {
@@ -47,7 +59,10 @@ export default {
     }
   },
   data() {
+    const refs = Array.isArray(this.field.ref) ? this.field.ref : [this.field.ref]
     return {
+      refs,
+      backends: refs.map(ref => this.getBackend(ref)),
       // TODO: hacks to make `collections` and `groups` reactive on store changes
       resolvedBackendMetas: [],
       resolvedListItems: [],
@@ -55,11 +70,15 @@ export default {
     }
   },
   computed: {
+    notAuthorizedBackends() {
+      return this.backends
+        .filter(backend => backend.config.authHeader && !backend.apiKey)
+    },
+    hasAccessToApi() {
+      return this.notAuthorizedBackends.length == 0
+    },
     itemFilterParams() {
       return this.$route.query
-    },
-    refs() {
-      return Array.isArray(this.field.ref) ? this.field.ref : [this.field.ref]
     },
     collections() {
       return this.refs.reduce((hash, ref) => {
@@ -181,39 +200,52 @@ export default {
       return this.value != this.origValue
     }
   },
-  async created() {
-    const backendMetaPromises = this.refs
-      .map(ref => this.getBackend(ref))
-      .filter(backend => !backend.meta && backend.config.key != store.backend.config.key)
-      .map(backend => backend.fetchMeta())
-
-    if (backendMetaPromises.length > 0) {
-      await Promise.all(backendMetaPromises)
-      this.resolvedBackendMetas.push(...backendMetaPromises)
+  watch: {
+    hasAccessToApi(yes) {
+      if (yes) {
+        this.fetchDataIfNeeded()
+      }
     }
-
-    const collectionPromises = this.refs.map((ref) => {
-      const filterParams = Object.entries(ref.filters)
-        .reduce((hash, [key, value]) => {
-          hash[key] = value
-
-          Object.entries(this.itemFilterParams).forEach(([fpKey, fpValue]) => {
-            hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
-          })
-
-          return hash
-        }, {})
-
-      const backend = this.getBackend(ref)
-      const collection = backend.getCollection(ref.collectionKey)
-
-      return collection.fetchListItems(filterParams)
-    })
-
-    await Promise.all(collectionPromises)
-    this.resolvedListItems.push(...collectionPromises)
+  },
+  async created() {
+    this.fetchDataIfNeeded()
   },
   methods: {
+    async fetchDataIfNeeded() {
+      if (!this.hasAccessToApi) {
+        return
+      }
+
+      const backendMetaPromises = this.backends
+        .filter(backend => !backend.meta && backend.config.key != store.backend.config.key)
+        .map(backend => backend.fetchMeta())
+
+      if (backendMetaPromises.length > 0) {
+        await Promise.all(backendMetaPromises)
+        this.resolvedBackendMetas.push(...backendMetaPromises)
+      }
+
+      const collectionPromises = this.refs.map((ref) => {
+        const filterParams = Object.entries(ref.filters)
+          .reduce((hash, [key, value]) => {
+            hash[key] = value
+
+            Object.entries(this.itemFilterParams).forEach(([fpKey, fpValue]) => {
+              hash[key] = hash[key].replace(`{${fpKey}}`, fpValue)
+            })
+
+            return hash
+          }, {})
+
+        const backend = this.getBackend(ref)
+        const collection = backend.getCollection(ref.collectionKey)
+
+        return collection.fetchListItems(filterParams)
+      })
+
+      await Promise.all(collectionPromises)
+      this.resolvedListItems.push(...collectionPromises)
+    },
     getBackend(ref) {
       return ref.backendKey ? store.getBackend(ref.backendKey) : store.backend
     },

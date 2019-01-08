@@ -17,6 +17,7 @@
     <Authorize
       v-else
       :backend="backend"
+      :button-text="`Authorize ${backend.config.title}`"
     />
   </b-form-group>
 </template>

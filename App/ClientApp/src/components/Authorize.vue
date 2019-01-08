@@ -3,7 +3,7 @@
     <b-button
       @click="onAuthClick"
     >
-      {{ buttonText }}
+      {{ buttonText || defaultButtonText }}
     </b-button>
 
     <b-modal
@@ -34,6 +34,10 @@ export default {
     backend: {
       type: Object,
       required: true
+    },
+    buttonText: {
+      type: String,
+      default: undefined
     }
   },
   data() {
@@ -46,7 +50,7 @@ export default {
     title() {
       return `Authorize ${this.backend.config.title}`
     },
-    buttonText() {
+    defaultButtonText() {
       return this.backend.apiKey ? 'Edit key' : 'Authorize'
     }
   },
