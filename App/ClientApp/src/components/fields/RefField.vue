@@ -64,7 +64,6 @@ export default {
       refs,
       backends: refs.map(ref => this.getBackend(ref)),
       // TODO: hacks to make `collections` and `groups` reactive on store changes
-      resolvedBackendMetas: [],
       resolvedListItems: [],
       dirty: false
     }
@@ -82,9 +81,6 @@ export default {
     },
     collections() {
       return this.refs.reduce((hash, ref) => {
-        // eslint-disable-next-line no-unused-vars
-        const reactivityTrigger = this.resolvedBackendMetas.length
-
         const backend = this.getBackend(ref)
         hash[this.getRefKey(ref)] = backend.getCollection(ref.collectionKey)
         return hash
@@ -222,7 +218,6 @@ export default {
 
       if (backendMetaPromises.length > 0) {
         await Promise.all(backendMetaPromises)
-        this.resolvedBackendMetas.push(...backendMetaPromises)
       }
 
       const collectionPromises = this.refs.map((ref) => {
