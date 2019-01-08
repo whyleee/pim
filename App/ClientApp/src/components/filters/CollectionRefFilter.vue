@@ -5,6 +5,7 @@
     horizontal
   >
     <multiselect
+      v-if="hasAccessToApi"
       :value="selectedValue"
       :options="options.map(opt => opt.value)"
       :custom-label="val => options.find(opt => opt.value == val).text"
@@ -12,15 +13,22 @@
       label="text"
       @input="onInput"
     />
+
+    <Authorize
+      v-else
+      :backend="backend"
+    />
   </b-form-group>
 </template>
 
 <script>
-import Multiselect from 'vue-multiselect'
 import store from '@/store'
+import Authorize from '@/components/Authorize.vue'
+import Multiselect from 'vue-multiselect'
 
 export default {
   components: {
+    Authorize,
     Multiselect
   },
   props: {
@@ -49,6 +57,12 @@ export default {
     }
   },
   computed: {
+    requiresApiKey() {
+      return this.backend.config.authHeader
+    },
+    hasAccessToApi() {
+      return !this.requiresApiKey || !!this.backend.apiKey
+    },
     filterParams() {
       return Object.entries(this.filter.filters)
         .reduce((hash, [key, value]) => {
@@ -66,6 +80,9 @@ export default {
     allFiltersSet() {
       return Object.values(this.filterParams)
         .every(val => val && !val.startsWith('{') && !val.endsWith('}'))
+    },
+    filterParamsModified() {
+      return JSON.stringify(this.filterParams) != JSON.stringify(this.origFilterParams)
     },
     options() {
       if (this.collection == null) {
@@ -98,31 +115,37 @@ export default {
     }
   },
   watch: {
+    hasAccessToApi(yes) {
+      if (yes) {
+        this.fetchDataIfNeeded()
+      }
+    },
     filterParams: {
-      handler(value) {
-        if (this.allFiltersSet && JSON.stringify(value) != JSON.stringify(this.origFilterParams)) {
-          this.origFilterParams = value
-          this.fetchItems()
-        }
+      handler() {
+        this.fetchDataIfNeeded()
       }
     }
   },
-  async created() {
-    if (!this.backend.meta && this.backend.config.key != store.backend.config.key) {
-      await this.backend.fetchMeta()
-      this.collection = this.backend.getCollection(this.filter.refCollectionKey)
-    }
-
-    if (this.allFiltersSet) {
-      this.fetchItems()
-    }
+  created() {
+    this.fetchDataIfNeeded()
   },
   methods: {
-    async fetchItems() {
-      if (this.collection == null) {
+    async fetchDataIfNeeded() {
+      if (!this.hasAccessToApi) {
         return
       }
 
+      if (!this.backend.meta && this.backend.config.key != store.backend.config.key) {
+        await this.backend.fetchMeta()
+        this.collection = this.backend.getCollection(this.filter.refCollectionKey)
+      }
+
+      if (this.allFiltersSet && this.filterParamsModified) {
+        this.origFilterParams = this.filterParams
+        await this.fetchItems()
+      }
+    },
+    async fetchItems() {
       await this.collection.fetchListItems(this.filterParams)
 
       if (this.selectedValue != this.value) {
