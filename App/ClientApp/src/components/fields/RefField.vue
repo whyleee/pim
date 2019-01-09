@@ -109,12 +109,16 @@ export default {
       }
 
       if (!this.isGrouped) {
-        return this.groups[0].items.map(item => this.groups[0].getKey(item))
+        return this.groups[0].items
+          .map(item => this.groups[0].getKey(item))
+          .map(value => this.convertType(value))
       }
 
       return this.groups.map(group => ({
         name: group.name,
-        items: group.items.map(item => group.getKey(item))
+        items: group.items
+          .map(item => group.getKey(item))
+          .map(value => this.convertType(value))
       }))
     },
     labels() {
@@ -131,21 +135,12 @@ export default {
     value: {
       get() {
         if (!this.dirty && this.readFrom && this.item[this.readFrom] !== undefined) {
-          return this.fixReadFromValue(this.item[this.readFrom])
+          return this.convertType(this.fixReadFromValue(this.item[this.readFrom]))
         }
-        return this.item[this.field.name]
+        return this.convertType(this.item[this.field.name])
       },
       set(value) {
-        let converted = value
-
-        if (value && this.field.type == 'string') {
-          converted = value.toString()
-        }
-        if (value && this.multiple && this.field.kind == 'string') {
-          converted = value.map(val => val.toString())
-        }
-
-        this.item[this.field.name] = converted
+        this.item[this.field.name] = this.convertType(value)
         this.dirty = true
       }
     },
@@ -250,6 +245,18 @@ export default {
     },
     getLabel(key) {
       return this.labels[key] || key
+    },
+    convertType(value) {
+      if (value && this.field.type == 'string') {
+        return value.toString()
+      }
+      if (value && this.multiple && this.field.kind == 'string') {
+        if (Array.isArray(value)) {
+          return value.map(val => val.toString())
+        }
+        return value.toString()
+      }
+      return value
     },
     // TODO: temp fix for parent id in path string [probably must be a plugin]
     fixReadFromValue(value) {
