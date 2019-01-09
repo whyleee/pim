@@ -25,7 +25,13 @@ body {
   padding-top: 5rem;
 }
 
-/* vue-multiselect style overrides */
+/* fix overlapping other absolute elements like multiselect list */
+.input-group-prepend button.btn,
+.input-group-append button.btn {
+  z-index: 1; /* reduced from 2 */
+}
+
+/* vue-multiselect bootstrap style overrides */
 .multiselect .multiselect__tags {
   border-radius: 0.25rem;
 }
