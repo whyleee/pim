@@ -32,9 +32,17 @@ body {
 }
 
 /* vue-multiselect bootstrap style overrides */
+
+/* align input size */
 .multiselect .multiselect__tags {
   border-radius: 0.25rem;
 }
+.multiselect .multiselect__placeholder {
+  margin-bottom: 7px;
+  padding-top: 0;
+}
+
+/* align input state colors */
 .multiselect .multiselect__tags {
   border-color: #ced4da;
 }
@@ -44,8 +52,15 @@ body {
 .multiselect.is-invalid .multiselect__tags {
   border-color: #dc3545;
 }
-.multiselect .multiselect__placeholder {
-  margin-bottom: 7px;
-  padding-top: 0;
+
+/* align list hover and select styles */
+.multiselect .multiselect__option--highlight {
+  background-color: #f8f9fa;
+  color: inherit;
+}
+.multiselect .multiselect__option--highlight:after {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  font-weight: normal;
 }
 </style>
