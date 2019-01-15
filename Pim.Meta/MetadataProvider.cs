@@ -95,20 +95,24 @@ namespace Pim.Meta
         private IEnumerable<CollectionFilterInfo> GetCollectionFilterInfos(PropertyInfo prop)
         {
             return prop.GetCustomAttributes<CollectionFilterAttribute>()
-                .Select(attr =>
+                .GroupBy(filter => filter.Key)
+                .Select(attrs =>
                 {
+                    var attr = attrs.First();
+
                     if (attr is CollectionQueryFilterAttribute queryAttr)
                     {
                         return (CollectionFilterInfo) GetCollectionQueryFilter(queryAttr);
                     }
 
-                    if (attr is CollectionRefFilterAttribute refAttr)
+                    if (attr is CollectionRefFilterAttribute)
                     {
+                        // TODO: values are shared for all refs. This can be fixed by switching to fluent api
                         var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
-                            .Where(valueAttr => valueAttr.RefKey == refAttr.Key)
+                            .Where(valueAttr => valueAttr.RefKey == attr.Key)
                             .ToList();
 
-                        return (CollectionFilterInfo) GetCollectionRefFilter(refAttr, filterValues);
+                        return GetCollectionRefFilter(attrs.Cast<CollectionRefFilterAttribute>().ToList(), filterValues);
                     }
 
                     throw new ArgumentException("Unknown filter attribute");
@@ -128,8 +132,18 @@ namespace Pim.Meta
             };
         }
 
-        private CollectionRefFilterInfo GetCollectionRefFilter(CollectionRefFilterAttribute attr, IEnumerable<CollectionRefFilterValueAttribute> filterValues)
+        private CollectionRefFilterInfo GetCollectionRefFilter(IEnumerable<CollectionRefFilterAttribute> attrs, IEnumerable<CollectionRefFilterValueAttribute> filterValues)
         {
+            var refs = attrs
+                .Select(refAttr => new CollectionRefInfo
+                {
+                    BackendKey = refAttr.BackendKey?.ToLowerInvariant(),
+                    CollectionKey = refAttr.RefCollectionKey.ToLowerInvariant(),
+                    Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+                })
+                .ToList();
+            var attr = attrs.First();
+
             return new CollectionRefFilterInfo
             {
                 Key = attr.Key,
@@ -137,10 +151,8 @@ namespace Pim.Meta
                 Description = attr.Description,
                 Type = "ref",
                 Required = attr.Required,
-                RefBackendKey = attr.BackendKey?.ToLowerInvariant(),
-                RefCollectionKey = attr.RefCollectionKey.ToLowerInvariant(),
-                Multiple = attr.Multiple,
-                Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+                Ref = refs.Count > 1 ? (object) refs : refs.Count == 1 ? refs.Single() : null,
+                Multiple = attr.Multiple
             };
         }
 

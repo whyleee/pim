@@ -8,15 +8,9 @@ namespace Pim.Meta
     public class CollectionRefFilterInfo : CollectionFilterInfo
     {
         [DataMember(EmitDefaultValue = false)]
-        public string RefBackendKey { get; set; }
-
-        [DataMember]
-        public string RefCollectionKey { get; set; }
-
-        [DataMember(EmitDefaultValue = false)]
         public bool Multiple { get; set; }
 
         [DataMember]
-        public IDictionary<string, object> Filters { get; set; }
+        public object Ref { get; set; }
     }
 }
