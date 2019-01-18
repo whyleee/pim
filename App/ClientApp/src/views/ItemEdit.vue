@@ -174,7 +174,7 @@ export default {
         return '&nbsp;'
       }
       if (this.item) {
-        return this.item[this.collection.titleName]
+        return this.collection.getTitle(this.item)
           || this.collection.getKey(this.item)
       }
       return 'New Item'

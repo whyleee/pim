@@ -107,9 +107,9 @@ function createCollection(meta, dataApi) {
       const keyFields = meta.itemType.fields.filter(field => field.attributes.key)
       return keyFields.map(field => item[field.name]).join('~') || item.id
     },
-    get titleName() {
+    getTitle(item) {
       const titleField = meta.itemType.fields.find(field => field.attributes.title)
-      return titleField ? titleField.name : 'name'
+      return titleField ? item[titleField.name] : item.name
     },
 
     async fetchListItems(params = {}) {

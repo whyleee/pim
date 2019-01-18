@@ -60,7 +60,7 @@
           :key="collection.getKey(item)"
         >
           <template v-if="readonly || constant">
-            {{ item[collection.titleName] || `[${collection.getKey(item)}]` }}
+            {{ collection.getTitle(item) || `[${collection.getKey(item)}]` }}
           </template>
           <b-link
             v-else
@@ -70,7 +70,7 @@
               query: itemEditQuery
             }"
           >
-            {{ item[collection.titleName] || `[${collection.getKey(item)}]` }}
+            {{ collection.getTitle(item) || `[${collection.getKey(item)}]` }}
           </b-link>
           <b-link
             v-if="!readonly && !constant"
@@ -89,7 +89,7 @@
         >
           <p v-if="selectedItem">
             Are you sure you want to delete item "
-            {{ selectedItem[collection.titleName] || collection.getKey(selectedItem) }}"?
+            {{ collection.getTitle(selectedItem) || collection.getKey(selectedItem) }}"?
           </p>
         </b-modal>
       </b-list-group>
