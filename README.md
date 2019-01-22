@@ -7,10 +7,16 @@ Simple edit UI for your backend. http://pim-pn.azurewebsites.net
 - Basic create/update/delete flow
 - Multiple external backends
 - Multiple collections with filters per backend
+- Relations between collections (across all backends)
 - Authorization with HTTP headers
+- Supported collection filters:
+  - Reference (items from other collections)
+  - Query (text parameter)
 - Supported fields:
   - Checkbox
   - Datetime
+  - Reference (select list with autocomplete)
+  - Reference list (multiselect with autocomplete)
   - Select many (checkbox list)
   - Select one (select list)
   - Text
@@ -114,8 +120,14 @@ Base URL to data API, used to work with backend data. Every collection in the ba
 ## C# Meta Attributes
 The list of available C# attributes and options for metadata:
 
+### CollectionAttribute
+Specifies collection options.
+
 #### CollectionAttribute.Path
-Path to collection REST CRUD API (Create-Read-Update-Delete) used to work with data, appended to `%data.baseUrl%` from config. Default path is C# property name. 
+Path to collection REST CRUD API (Create-Read-Update-Delete) used to work with data, appended to `%data.baseUrl%` from config. Default path is C# property name.
+
+#### CollectionAttribute.UpdateMethod
+HTTP method to use for updating collection items (`PUT` or `PATCH`).
 
 #### CollectionAttribute.Readonly
 Marks collection as readonly. Disables all editing functionality, only list view is available.
@@ -126,11 +138,70 @@ Marks collection as constant. Disables existing item editing, but allows viewing
 #### CollectionAttribute.ItemsProperty
 Name of the response data property containing result collection items from `GET %data.baseUrl%%collection.path%` API. By default entire response is treated as a collection.
 
+#### CollectionAttribute.KeyDelimiter
+Delimiter to use in URLs for items with compound key (for example `/` for `items/key1/key2` or `-` for `items/key1-key2` URLs).
+
+### Collection Filters
+Add filters for collection list view to reduce results.
+
 #### CollectionQueryFilterAttribute
 Adds a string filter to collection items. Displayed as a text input in the collection list view.
 
 #### CollectionRefFilterAttribute
-Adds a referenced collection filter to collection items. Displayed as a select list in the collection list view.
+Adds a referenced collection filter to collection items. Displayed as a select list with autocomplete in the collection list view.
+
+#### CollectionFilterAttribute.Key
+Filter parameter name in API URL. Selected filter value will be set into `{filterKey}` placeholder in `CollectionAttribute.Path` or added as a query string parameter otherwise.
+
+#### CollectionFilterAttribute.Name
+Friendly filter name displayed in UI.
+
+#### CollectionFilterAttribute.Description
+Short filter description or hint displayed in UI.
+
+#### CollectionFilterAttribute.Required
+Specifies that filter must be set before collection list view displays results. Selects first item automatically in ref filters.
+
+#### CollectionRefFilterAttribute.RefCollectionKey
+Key of the referenced collection, to get its items as filter options.
+
+#### CollectionRefFilterAttribute.BackendKey
+Key of the backend where the referenced collection exposed. Empty means current backend.
+
+#### CollectionRefFilterAttribute.Multiple
+Allows multiple selection from the referenced collection. Sends selected values comma-separated to API URL.
+
+#### CollectionRefFilterValueAttribute
+Adds a value passed to referenced collection API when loading filter or reference field options.
+
+#### CollectionRefFilterValueAttribute.RefKey
+Key of the collection filter to attach the value to. When used with ref fields (`CollectionRefAttribute`): this must be a key of the referenced collection.
+
+#### CollectionRefFilterValueAttribute.Key
+Parameter name in API URL to set the value to. Sets value to `{paramKey}` placeholder in the referenced `CollectionAttribute.Path` or added as a query string parameter otherwise.
+
+#### CollectionRefFilterValueAttribute.Value
+Parameter value passed to referenced collection API URL. Allows placeholders like `{paramKey}` that will be resolved from other selected filters.
+
+### Model Attributes
+
+#### GetModelAttribute (class)
+References C# model type for items returned by GET methods, to expose additional fields in metadata. Useful when POST C# model type used as collection model in metadata (because it has validation attributes), but this model lacks some required fields (like item ID for example).
+
+#### CollectionRefAttribute
+Sets field type to collection reference. Displayed as select list with autocomplete from referenced collection items. Allows multiselection automatically if C# property type is enumerable (excluding strings).
+
+#### CollectionRefAttribute.Key
+Key of the referenced collection, to get its items as select list options.
+
+#### CollectionRefAttribute.BackendKey
+Key of the backend where the referenced collection exposed. Empty means current backend.
+
+#### ReadFromAttribute
+Tells to read data from other field. Useful when POST field is different from GET. Tested with constant fields only (allow initial value, but readonly afterwards).
+
+#### TitleAttribute
+Marks field as the one that returns the item title. Similar to standard C# `KeyAttribute` that marks item IDs.
 
 ## Deployment
 The app is cloud ready and can be deployed in minutes to any cloud provider.
@@ -139,7 +210,7 @@ For example, to deploy the app to Azure: run `Publish...` action for `App` proje
 
 ## License
 
-Copyright (C) 2018-present Pavlo Niezhentsev
+Copyright (C) 2019-present Pavlo Niezhentsev
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
