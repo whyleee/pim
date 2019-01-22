@@ -27,7 +27,10 @@
       </b-nav>
       <hr>
 
-      <Authorize v-if="requiresApiKey"/>
+      <Authorize
+        v-if="requiresApiKey"
+        :backend="store"
+      />
     </b-col>
 
     <b-col>

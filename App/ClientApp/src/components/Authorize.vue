@@ -3,13 +3,13 @@
     <b-button
       @click="onAuthClick"
     >
-      {{ buttonText }}
+      {{ buttonText || defaultButtonText }}
     </b-button>
 
     <b-modal
       ref="authModal"
       :visible="authModalVisible"
-      title="Authorize"
+      :title="title"
       @ok="onAuthSubmit"
     >
       <b-form @submit.prevent="onAuthSubmit">
@@ -29,28 +29,38 @@
 </template>
 
 <script>
-import store from '@/store'
-
 export default {
+  props: {
+    backend: {
+      type: Object,
+      required: true
+    },
+    buttonText: {
+      type: String,
+      default: undefined
+    }
+  },
   data() {
     return {
-      store: store.backend,
       authModalVisible: false,
       authModalApiKey: null
     }
   },
   computed: {
-    buttonText() {
-      return this.store.apiKey ? 'Edit key' : 'Authorize'
+    title() {
+      return `Authorize ${this.backend.config.title}`
+    },
+    defaultButtonText() {
+      return this.backend.apiKey ? 'Edit key' : 'Authorize'
     }
   },
   methods: {
     onAuthClick() {
-      this.authModalApiKey = this.store.apiKey
+      this.authModalApiKey = this.backend.apiKey
       this.$refs.authModal.show()
     },
     onAuthSubmit() {
-      this.store.apiKey = this.authModalApiKey
+      this.backend.apiKey = this.authModalApiKey
       this.authModalApiKey = null
     }
   }

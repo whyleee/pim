@@ -41,6 +41,7 @@
 import Vue from 'vue'
 import CheckboxField from './CheckboxField.vue'
 import DateField from './DateField.vue'
+import RefField from './RefField.vue'
 import SelectManyField from './SelectManyField.vue'
 import SelectOneField from './SelectOneField.vue'
 import TableField from './TableField.vue'
@@ -51,6 +52,7 @@ export default Vue.component('Field', {
   components: {
     CheckboxField,
     DateField,
+    RefField,
     SelectManyField,
     SelectOneField,
     TableField,
@@ -90,13 +92,17 @@ export default Vue.component('Field', {
       return null
     },
     fieldComponent() {
+      if (this.field.ref) {
+        return RefField
+      }
       if (this.field.type == 'bool') {
         return CheckboxField
       }
       if (this.field.type == 'datetime') {
         return DateField
       }
-      if (this.field.type == 'array') {
+      if (this.field.type == 'array'
+        && this.field.attributes.selectOptions) {
         return SelectManyField
       }
       if (this.field.type == 'string') {

@@ -48,6 +48,12 @@ export default {
 
             return url
           },
+          idUrl(id) {
+            if (collection.keyDelimiter) {
+              return id.replace(/~/g, collection.keyDelimiter)
+            }
+            return id
+          },
           async get(params = {}) {
             const response = await http.get(this.url(params))
 
@@ -56,17 +62,24 @@ export default {
               : response.data
           },
           async getById(id, params = {}) {
-            const response = await http.get(`${this.url(params)}/${id}`)
+            const response = await http.get(`${this.url(params)}/${this.idUrl(id)}`)
             return response.data
           },
           post(item, params = {}) {
             return http.post(this.url(params), item)
           },
           put(id, item, params = {}) {
-            return http.put(`${this.url(params)}/${id}`, item)
+            return http.put(`${this.url(params)}/${this.idUrl(id)}`, item)
+          },
+          patch(id, patch, params = {}) {
+            return http.patch(`${this.url(params)}/${this.idUrl(id)}`, patch, {
+              headers: {
+                'content-type': 'application/merge-patch+json'
+              }
+            })
           },
           delete(id, params = {}) {
-            return http.delete(`${this.url(params)}/${id}`)
+            return http.delete(`${this.url(params)}/${this.idUrl(id)}`)
           }
         }
       }

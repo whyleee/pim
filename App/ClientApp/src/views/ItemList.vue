@@ -36,8 +36,8 @@
             />
             <CollectionRefFilter
               v-else-if="filter.type == 'ref'"
-              :store="store"
               :filter="filter"
+              :list-filter-params="filterParams"
               v-model="filterParams[filter.key]"
             />
           </b-col>
@@ -57,20 +57,20 @@
       >
         <b-list-group-item
           v-for="item in collection.listItems"
-          :key="item[collection.keyName]"
+          :key="collection.getKey(item)"
         >
           <template v-if="readonly || constant">
-            {{ item.name }}
+            {{ collection.getTitle(item) || `[${collection.getKey(item)}]` }}
           </template>
           <b-link
             v-else
             :to="{
               name: `${backend.key}-edit`,
-              params: { collection: collectionKey, id: item[collection.keyName] },
+              params: { collection: collectionKey, id: collection.getKey(item) },
               query: itemEditQuery
             }"
           >
-            {{ item.name }}
+            {{ collection.getTitle(item) || `[${collection.getKey(item)}]` }}
           </b-link>
           <b-link
             v-if="!readonly && !constant"
@@ -88,7 +88,8 @@
           @cancel="onDeleteModalCancel"
         >
           <p v-if="selectedItem">
-            Are you sure you want to delete item "{{ selectedItem.name }}"?
+            Are you sure you want to delete item "
+            {{ collection.getTitle(selectedItem) || collection.getKey(selectedItem) }}"?
           </p>
         </b-modal>
       </b-list-group>
@@ -176,7 +177,7 @@ export default {
   watch: {
     filterParams: {
       deep: true,
-      async handler() {
+      handler() {
         if (this.allFiltersSet) {
           this.fetchItems()
         }
@@ -213,7 +214,7 @@ export default {
       this.selectedItem = item
     },
     async onDeleteModalOk() {
-      const id = this.selectedItem[this.collection.keyName]
+      const id = this.collection.getKey(this.selectedItem)
       await this.collection.deleteItem(id, this.filterParams)
       this.selectedItem = null
     },

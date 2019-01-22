@@ -21,6 +21,7 @@ namespace App.Models
 
         [Display(GroupName = VariantSections.Header)]
         [Required]
+        [CollectionRef(nameof(Backend.Products))]
         public string ProductId { get; set; }
 
         [Display(GroupName = VariantSections.Header)]

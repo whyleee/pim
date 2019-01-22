@@ -174,7 +174,8 @@ export default {
         return '&nbsp;'
       }
       if (this.item) {
-        return this.item.name
+        return this.collection.getTitle(this.item)
+          || this.collection.getKey(this.item)
       }
       return 'New Item'
     },
@@ -205,6 +206,17 @@ export default {
     },
     hasPendingChanges() {
       return JSON.stringify(this.form) != JSON.stringify(this.origItem)
+    },
+    itemPatch() {
+      const patch = {}
+
+      Object.entries(this.form).forEach(([key, value]) => {
+        if (JSON.stringify(value) != JSON.stringify(this.origItem[key])) {
+          patch[key] = value
+        }
+      })
+
+      return patch
     },
     saveButtonVariant() {
       if (this.hasErrors) {
@@ -252,7 +264,11 @@ export default {
 
       try {
         if (this.itemId) {
-          await this.collection.updateItem(this.itemId, this.form, this.filterParams)
+          if (this.collection.meta.updateMethod == 'patch') {
+            await this.collection.patchItem(this.itemId, this.itemPatch, this.filterParams)
+          } else {
+            await this.collection.updateItem(this.itemId, this.form, this.filterParams)
+          }
         } else {
           await this.collection.createItem(this.form, this.filterParams)
         }

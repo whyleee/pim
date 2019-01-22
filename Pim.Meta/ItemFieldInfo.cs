@@ -23,5 +23,8 @@ namespace Pim.Meta
 
         [DataMember(EmitDefaultValue = false)]
         public ItemTypeInfo ComplexType { get; set; }
+
+        [DataMember(EmitDefaultValue = false)]
+        public object Ref { get; set; }
     }
 }

@@ -44,14 +44,13 @@ namespace Pim.Meta
                 Key = collectionProp.Name.ToLowerInvariant(),
                 Name = GetCollectionName(collectionProp),
                 Path = GetCollectionPath(collectionProp),
+                UpdateMethod = GetCollectionUpdateMethod(collectionProp),
                 Readonly = GetCollectionReadOnly(collectionProp),
                 Constant = GetCollectionConstant(collectionProp),
                 ItemsProperty = GetCollectionItemsProperty(collectionProp),
+                KeyDelimiter = GetCollectionKeyDelimiter(collectionProp),
                 ItemType = GetTypeInfo(itemType),
-                Filters = collectionProp
-                    .GetCustomAttributes<CollectionFilterAttribute>()
-                    .Select(GetCollectionFilterInfo)
-                    .ToList()
+                Filters = GetCollectionFilterInfos(collectionProp)
             };
         }
 
@@ -65,6 +64,12 @@ namespace Pim.Meta
         {
             return prop.GetCustomAttribute<CollectionAttribute>()?.Path
                 ?? $"/{prop.Name.ToLowerInvariant()}";
+        }
+
+        private string GetCollectionUpdateMethod(PropertyInfo prop)
+        {
+            return (prop.GetCustomAttribute<CollectionAttribute>()?.UpdateMethod ?? HttpUpdateMethod.Put)
+                .ToString().ToLowerInvariant();
         }
 
         private bool GetCollectionReadOnly(PropertyInfo prop)
@@ -82,47 +87,119 @@ namespace Pim.Meta
             return Helpers.ToCamelCase(prop.GetCustomAttribute<CollectionAttribute>()?.ItemsProperty);
         }
 
-        private CollectionFilterInfo GetCollectionFilterInfo(CollectionFilterAttribute attr)
+        private string GetCollectionKeyDelimiter(PropertyInfo prop)
         {
-            if (attr is CollectionQueryFilterAttribute)
-            {
-                return new CollectionQueryFilterInfo
-                {
-                    Key = attr.Key,
-                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
-                    Description = attr.Description,
-                    Type = "query",
-                    Required = attr.Required
-                };
-            }
+            return prop.GetCustomAttribute<CollectionAttribute>()?.KeyDelimiter;
+        }
 
-            if (attr is CollectionRefFilterAttribute refFilterAttr)
-            {
-                return new CollectionRefFilterInfo
+        private IEnumerable<CollectionFilterInfo> GetCollectionFilterInfos(PropertyInfo prop)
+        {
+            return prop.GetCustomAttributes<CollectionFilterAttribute>()
+                .GroupBy(filter => filter.Key)
+                .Select(attrs =>
                 {
-                    Key = attr.Key,
-                    Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
-                    Description = attr.Description,
-                    Type = "ref",
-                    Required = attr.Required,
-                    RefCollectionKey = Helpers.ToCamelCase(refFilterAttr.RefCollectionKey)
-                };
-            }
+                    var attr = attrs.First();
 
-            throw new ArgumentException("Unknown filter attribute");
+                    if (attr is CollectionQueryFilterAttribute queryAttr)
+                    {
+                        return (CollectionFilterInfo) GetCollectionQueryFilter(queryAttr);
+                    }
+
+                    if (attr is CollectionRefFilterAttribute)
+                    {
+                        // TODO: values are shared for all refs. This can be fixed by switching to fluent api
+                        var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
+                            .Where(valueAttr => valueAttr.RefKey == attr.Key)
+                            .ToList();
+
+                        return GetCollectionRefFilter(attrs.Cast<CollectionRefFilterAttribute>().ToList(), filterValues);
+                    }
+
+                    throw new ArgumentException("Unknown filter attribute");
+                })
+                .ToList();
+        }
+
+        private CollectionQueryFilterInfo GetCollectionQueryFilter(CollectionQueryFilterAttribute attr)
+        {
+            return new CollectionQueryFilterInfo
+            {
+                Key = attr.Key,
+                Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                Description = attr.Description,
+                Type = "query",
+                Required = attr.Required
+            };
+        }
+
+        private CollectionRefFilterInfo GetCollectionRefFilter(IEnumerable<CollectionRefFilterAttribute> attrs, IEnumerable<CollectionRefFilterValueAttribute> filterValues)
+        {
+            var refs = attrs
+                .Select(refAttr => new CollectionRefInfo
+                {
+                    BackendKey = refAttr.BackendKey?.ToLowerInvariant(),
+                    CollectionKey = refAttr.RefCollectionKey.ToLowerInvariant(),
+                    Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+                })
+                .ToList();
+            var attr = attrs.First();
+
+            return new CollectionRefFilterInfo
+            {
+                Key = attr.Key,
+                Name = attr.Name ?? Helpers.ToSentenceCase(attr.Key),
+                Description = attr.Description,
+                Type = "ref",
+                Required = attr.Required,
+                Ref = refs.Count > 1 ? (object) refs : refs.Count == 1 ? refs.Single() : null,
+                Multiple = attr.Multiple
+            };
         }
 
         private ItemTypeInfo GetTypeInfo(Type type)
         {
+            var fields = GetFields(type);
+            InsertAdditionalGetModelFields(type, fields);
+
             return new ItemTypeInfo
             {
                 Name = type.Name,
-                Fields = type.GetProperties()
-                    .Where(ShouldScaffold)
-                    .Select(GetTypeFieldInfo)
-                    .ToList(),
+                Fields = fields.Select(GetTypeFieldInfo).ToList(),
                 DefaultItem = Activator.CreateInstance(type)
             };
+        }
+
+        private List<PropertyInfo> GetFields(Type type)
+        {
+            return type.GetProperties().Where(ShouldScaffold).ToList();
+        }
+
+        private void InsertAdditionalGetModelFields(Type type, List<PropertyInfo> fields)
+        {
+            var getModel = type.GetCustomAttribute<GetModelAttribute>();
+
+            if (getModel == null)
+            {
+                return;
+            }
+
+            var getModelFields = GetFields(getModel.Type);
+            var lastFoundIndex = -1;
+
+            foreach (var prop in getModelFields)
+            {
+                var index = fields.FindIndex(p => p.Name == prop.Name);
+
+                if (index == -1)
+                {
+                    fields.Insert(lastFoundIndex + 1, prop);
+                    lastFoundIndex += 1;
+                }
+                else
+                {
+                    lastFoundIndex = index;
+                }
+            }
         }
 
         private ItemFieldInfo GetTypeFieldInfo(PropertyInfo prop)
@@ -132,16 +209,12 @@ namespace Pim.Meta
                 Name = char.ToLower(prop.Name.First()) + prop.Name.Substring(1),
                 Type = GetTypeName(prop.PropertyType),
                 Kind = GetFieldKind(prop),
-                Attributes = GetAttributes(prop)
+                Attributes = GetAttributes(prop),
+                Ref = GetCollectionRefInfo(prop)
             };
 
-            if (field.Kind == DataType.Text.ToString())
-            {
-                field.Type = GetTypeName(typeof(string));
-                field.Kind = "array";
-            }
-
-            var itemType = IsCollection(prop.PropertyType)
+            var isCollection = IsCollection(prop.PropertyType);
+            var itemType = isCollection
                 ? prop.PropertyType.GetGenericArguments().First()
                 : prop.PropertyType;
 
@@ -150,11 +223,38 @@ namespace Pim.Meta
                 field.ComplexType = GetTypeInfo(itemType);
             }
 
+            if (isCollection && IsSimpleType(itemType))
+            {
+                field.Kind = GetTypeName(itemType);
+            }
+
             return field;
+        }
+
+        private object GetCollectionRefInfo(PropertyInfo prop)
+        {
+            var refs = prop.GetCustomAttributes<CollectionRefAttribute>()
+                .Select(attr =>
+                {
+                    var filterValues = prop.GetCustomAttributes<CollectionRefFilterValueAttribute>()
+                        .Where(valueAttr => valueAttr.RefKey == attr.CollectionKey)
+                        .ToList();
+
+                    return new CollectionRefInfo
+                    {
+                        BackendKey = attr.BackendKey?.ToLowerInvariant(),
+                        CollectionKey = attr.CollectionKey.ToLowerInvariant(),
+                        Filters = filterValues.ToDictionary(f => f.Key, f => f.Value)
+                    };
+                })
+                .ToList();
+
+            return refs.Count > 1 ? (object) refs : refs.Count == 1 ? refs.Single() : null;
         }
 
         private IDictionary<string, object> GetAttributes(PropertyInfo prop)
         {
+            var propType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
             var attrs = prop.GetCustomAttributes();
             var dict = new Dictionary<string, object>();
 
@@ -165,6 +265,10 @@ namespace Pim.Meta
                 if (attr is KeyAttribute)
                 {
                     dict["key"] = true;
+                }
+                if (attr is TitleAttribute)
+                {
+                    dict["title"] = true;
                 }
                 if (attr is ReadOnlyAttribute)
                 {
@@ -215,9 +319,9 @@ namespace Pim.Meta
                 }
             }
 
-            if (prop.PropertyType.IsEnum && !dict.ContainsKey("selectOptions"))
+            if (propType.IsEnum && !dict.ContainsKey("selectOptions"))
             {
-                var optionProvider = new EnumSelectOptionProvider(prop.PropertyType);
+                var optionProvider = new EnumSelectOptionProvider(propType);
                 dict["selectOptions"] = optionProvider.GetOptions();
             }
 
