@@ -29,6 +29,12 @@ namespace App.Business.MongoDB
             return await cursor.ToListAsync(ct);
         }
 
+        public async Task<IList<Variant>> GetAllByProductIdAsync(string productId, CancellationToken ct = default)
+        {
+            var cursor = await GetCollection().FindAsync(v => v.ProductId == productId, cancellationToken: ct);
+            return await cursor.ToListAsync(ct);
+        }
+
         public async Task<Variant> GetByIdAsync(string id, CancellationToken ct = default)
         {
             var cursor = await GetCollection().FindAsync(v => v.Id == id, cancellationToken: ct);

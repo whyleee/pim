@@ -9,6 +9,7 @@ namespace App.Business.Data
     public interface IVariantStore
     {
         Task<IList<Variant>> GetAllAsync(CancellationToken ct = default);
+        Task<IList<Variant>> GetAllByProductIdAsync(string productId, CancellationToken ct = default);
         Task<Variant> GetByIdAsync(string id, CancellationToken ct = default);
         Task InsertAsync(Variant variant, CancellationToken ct = default);
         Task<ReplaceOneResult> ReplaceAsync(Variant variant, CancellationToken ct = default);

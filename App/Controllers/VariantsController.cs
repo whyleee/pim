@@ -21,9 +21,11 @@ namespace App.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IList<Variant>>> Get(CancellationToken ct)
+        public async Task<ActionResult<IList<Variant>>> GetList(string productId = null, CancellationToken ct = default)
         {
-            var result = await _variantStore.GetAllAsync(ct);
+            var result = !string.IsNullOrEmpty(productId)
+                ? await _variantStore.GetAllByProductIdAsync(productId, ct)
+                : await _variantStore.GetAllAsync(ct);
 
             return Ok(result);
         }

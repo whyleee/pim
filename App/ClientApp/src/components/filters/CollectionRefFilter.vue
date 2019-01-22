@@ -201,7 +201,7 @@ export default {
       this.resolvedListItems.push(...collectionPromises)
 
       if (this.selectedValue != this.value) {
-        this.$emit('input', this.selectedValue)
+        this.onInput(this.selectedValue)
       }
     },
     getFilterParams(filters) {
@@ -229,7 +229,7 @@ export default {
       return this.labels[key] || key
     },
     onInput(value) {
-      this.$emit('input', value)
+      this.$emit('input', value == '' ? null : value)
     }
   }
 }
